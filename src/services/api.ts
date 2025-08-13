@@ -1,11 +1,10 @@
 import { PhoneNumber, CreatePhoneNumberRequest, UpdatePhoneNumberRequest } from '../types/phoneNumber';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/verificationsim';
 
 class PhoneNumberService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${API_PREFIX}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         ...options?.headers,
