@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, RefreshCw } from 'lucide-react';
+import { Plus, Search, Filter, RefreshCw, SquareCheckBig } from 'lucide-react';
 import { PhoneNumber } from '../types/phoneNumber';
 import { phoneNumberService } from '../services/api';
+import { messagesService } from '../services/messagesService';
 import { PhoneNumberCard } from '../components/PhoneNumberCard';
 import { PhoneNumberForm } from '../components/PhoneNumberForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { toast } from 'react-hot-toast';
+import { twMerge } from 'tailwind-merge';
 
 export const HomePage: React.FC = () => {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
@@ -19,6 +21,39 @@ export const HomePage: React.FC = () => {
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | undefined>();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPhoneNumbers, setSelectedPhoneNumbers] = useState<PhoneNumber[]>([]);
+
+  const handleSendMessages = async () => {
+    setIsSubmitting(true);
+    const phoneNumbersToSend = selectedPhoneNumbers.map(phone => phone.phoneNumber);
+    
+    const loadingToast = toast.loading('Enviando mensajes...');
+    
+    try {
+      const response = await messagesService.sendMessage({ phoneNumbers: phoneNumbersToSend });
+      
+      // Actualizar la lista de números con los estados actualizados
+      setPhoneNumbers(prev => {
+        const updatedNumbers = response.updatedNumbers as PhoneNumber[];
+        return prev.map((phone: PhoneNumber) => {
+          const updatedPhone = updatedNumbers.find((up: PhoneNumber) => up.id === phone.id);
+          return updatedPhone ? { ...phone, ...updatedPhone } : phone;
+        });
+      });
+      
+      toast.dismiss(loadingToast);
+      toast.success('Mensajes enviados exitosamente');
+      setSelectedPhoneNumbers([]);
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Error al enviar mensajes');
+      console.error('Error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const [areAllSelected, setAreAllSelected] = useState(false);
 
   const loadPhoneNumbers = async () => {
     try {
@@ -91,6 +126,25 @@ export const HomePage: React.FC = () => {
     }
   };
 
+  const handleToggleSelection = (phoneNumber: PhoneNumber) => {
+    console.log(phoneNumber.id,'numero seleccionado');
+    setSelectedPhoneNumbers(prev => 
+      prev.some(p => p.id === phoneNumber.id)
+        ? prev.filter(p => p.id !== phoneNumber.id)
+        : [...prev, phoneNumber]
+    );
+  };
+
+  const handleEdit = (phoneNumber: PhoneNumber) => {
+    setSelectedPhoneNumber(phoneNumber);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
   const handleDeletePhoneNumber = async () => {
     if (!deleteId) return;
     
@@ -146,6 +200,23 @@ export const HomePage: React.FC = () => {
             Gestiona y verifica números telefónicos
           </p>
         </motion.div>
+        <div className="flex items-center space-x-2">
+        <AnimatePresence>
+          {selectedPhoneNumbers.length > 0 && (
+            <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            exit={{ opacity: 0, x: -20 }}
+            onClick={handleSendMessages}
+            className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center space-x-2"
+            >
+              <SquareCheckBig className="w-4 h-4" />
+              <span>Empezar validacion</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         <motion.button
           initial={{ opacity: 0, x: 20 }}
@@ -153,11 +224,12 @@ export const HomePage: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={openCreateForm}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Número</span>
         </motion.button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -178,6 +250,28 @@ export const HomePage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              if (areAllSelected) {
+                setSelectedPhoneNumbers([]);
+                setAreAllSelected(false);
+              } else {
+                setSelectedPhoneNumbers(filteredPhoneNumbers);
+                setAreAllSelected(true);
+              }
+            }}
+            className={twMerge(
+              'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
+              areAllSelected ? 'bg-gray-200 dark:bg-gray-600' : ''
+            )}
+          >
+            <SquareCheckBig className="w-4 h-4" />
+            <span>{areAllSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}</span>
+          </motion.button>
 
           <div className="flex items-center space-x-3">
             <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500" />
@@ -228,12 +322,14 @@ export const HomePage: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence>
-              {filteredPhoneNumbers.map((phoneNumber) => (
+              {filteredPhoneNumbers.map((phone) => (
                 <PhoneNumberCard
-                  key={phoneNumber.id}
-                  phoneNumber={phoneNumber}
-                  onEdit={openEditForm}
-                  onDelete={openDeleteDialog}
+                  key={phone.id}
+                  phoneNumber={phone}
+                  onEdit={() => handleEdit(phone)}
+                  onDelete={() => handleDelete(phone.id)}
+                  isSelected={selectedPhoneNumbers.some(p => p.id === phone.id)}
+                  onToggleSelection={handleToggleSelection}
                 />
               ))}
             </AnimatePresence>

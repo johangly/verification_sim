@@ -47,5 +47,5 @@ class PhoneNumberService {
     });
   }
 }
-
+export {API_BASE_URL}
 export const phoneNumberService = new PhoneNumberService();

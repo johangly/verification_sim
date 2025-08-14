@@ -2,17 +2,23 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit, Trash2, Phone, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { PhoneNumber } from '../types/phoneNumber';
+import { Checkbox } from "../components/ui/checkbox"
+import { twMerge } from 'tailwind-merge';
 
 interface PhoneNumberCardProps {
   phoneNumber: PhoneNumber;
   onEdit: (phoneNumber: PhoneNumber) => void;
   onDelete: (id: number) => void;
+  isSelected: boolean;
+  onToggleSelection: (phoneNumber: PhoneNumber) => void;
 }
 
 export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
   phoneNumber,
   onEdit,
   onDelete,
+  isSelected,
+  onToggleSelection,
 }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -43,9 +49,9 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       whileHover={{ y: -2 }}
-      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+      className={twMerge("bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow", isSelected && "border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900/20")}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between h-[122px]">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
             <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -65,24 +71,27 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
           </div>
         </div>
 
-        <div className="flex space-x-2">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onEdit(phoneNumber)}
-            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-          >
-            <Edit className="w-4 h-4" />
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onDelete(phoneNumber.id)}
-            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </motion.button>
+        <div className='flex flex-col justify-between items-center h-full'>
+          <div className="flex space-x-2">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onEdit(phoneNumber)}
+              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+            >
+              <Edit className="w-4 h-4" />
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onDelete(phoneNumber.id)}
+              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </motion.button>
+          </div>
+          <Checkbox className="w-6 h-6 ml-auto" style={{backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"}} checked={isSelected} onCheckedChange={() => onToggleSelection(phoneNumber)} />
         </div>
       </div>
     </motion.div>
