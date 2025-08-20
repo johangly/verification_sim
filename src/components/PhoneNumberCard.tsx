@@ -14,6 +14,7 @@ interface PhoneNumberCardBaseProps {
   onToggleSelection: (phoneNumber: PhoneNumber) => void;
   children?: ReactNode;
   className?: string;
+  index?: number;
 }
 
 interface GridViewProps extends PhoneNumberCardBaseProps {
@@ -42,14 +43,16 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
   onDelete,
   isSelected,
   className,
+  index,
   onToggleSelection,
 }) => {
+  console.log(index);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, type: "tween" }}
+      transition={{ duration: 0.4,delay: Number(index) * 0.1, type: 'spring', stiffness: 100 }}
       key={phoneNumber.id} 
       className={cn(
         "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors",
@@ -107,6 +110,7 @@ const ListView: React.FC<Omit<ListViewProps, 'children'>> = ({
   onDelete,
   isSelected,
   className,
+  index,
   onToggleSelection,
 }) => {
   return (
@@ -114,10 +118,7 @@ const ListView: React.FC<Omit<ListViewProps, 'children'>> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2,delay: 0.1, 
-        default: { type: "spring" },
-        opacity: { ease: "linear" } 
-      }}
+      transition={{ duration: 0.4,delay: Number(index) * 0.1, type: 'spring', stiffness: 100 }}
       key={phoneNumber.id} 
       className={cn(
         "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors",
@@ -192,6 +193,7 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
   viewMode,
   phoneNumber,
   onEdit,
+  index,
   onDelete,
   isSelected,
   onToggleSelection,
@@ -199,6 +201,7 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
   const commonProps = {
     phoneNumber,
     onEdit,
+    index,
     onDelete,
     isSelected,
     onToggleSelection,

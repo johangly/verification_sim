@@ -166,8 +166,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, menuItems, use
                 <span className="text-white font-semibold text-sm">AD</span>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{user.nombre}</p>
-                <p className="text-xs text-gray-500">{user.grupo?.nombre_grupo ? user.grupo?.nombre_grupo : ''}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.nombre}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{user.grupo?.nombre_grupo ? user.grupo?.nombre_grupo : ''}</p>
               </div>
             </motion.div>
           ) : (

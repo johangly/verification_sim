@@ -331,12 +331,13 @@ export const HomePage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}
+            className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}
           >
             <AnimatePresence>
-              {filteredPhoneNumbers.map((phone) => (
+              {filteredPhoneNumbers.map((phone,index) => (
                 <PhoneNumberCard
                   key={phone.id}
+                  index={index}
                   viewMode={viewMode}
                   phoneNumber={phone}
                   onEdit={() => handleEdit(phone)}
