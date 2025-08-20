@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, RefreshCw, SquareCheckBig, List, LayoutGrid } from 'lucide-react';
+import { Plus, Search, SquareCheckBig } from 'lucide-react';
 import { PhoneNumber } from '../types/phoneNumber';
 import { phoneNumberService } from '../services/api';
 import { messagesService } from '../services/messagesService';
-import { PhoneNumberCard } from '../components/PhoneNumberCard';
 import { PhoneNumberForm } from '../components/PhoneNumberForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { toast } from 'react-hot-toast';
 import { twMerge } from 'tailwind-merge';
 
-export const HomePage: React.FC = () => {
+export const StadisticsPage: React.FC = () => {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [filteredPhoneNumbers, setFilteredPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -22,29 +20,17 @@ export const HomePage: React.FC = () => {
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | undefined>();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPhoneNumbers, setSelectedPhoneNumbers] = useState<PhoneNumber[]>([]);
 
   const handleSendMessages = async () => {
     setIsSubmitting(true);
-    const phoneNumbersToSend = selectedPhoneNumbers.map(phone => phone.phoneNumber);
     
     const loadingToast = toast.loading('Enviando mensajes...');
     
     try {
-      const response = await messagesService.sendMessage({ phoneNumbers: phoneNumbersToSend });
-      
-      // Actualizar la lista de números con los estados actualizados
-      setPhoneNumbers(prev => {
-        const updatedNumbers = response.updatedNumbers as PhoneNumber[];
-        return prev.map((phone: PhoneNumber) => {
-          const updatedPhone = updatedNumbers.find((up: PhoneNumber) => up.id === phone.id);
-          return updatedPhone ? { ...phone, ...updatedPhone } : phone;
-        });
-      });
+      // const response = await messagesService.sendMessage({ phoneNumbers: phoneNumbersToSend });
       
       toast.dismiss(loadingToast);
       toast.success('Mensajes enviados exitosamente');
-      setSelectedPhoneNumbers([]);
     } catch (error) {
       toast.dismiss(loadingToast);
       toast.error('Error al enviar mensajes');
@@ -53,8 +39,6 @@ export const HomePage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
-  const [areAllSelected, setAreAllSelected] = useState(false);
 
   const loadPhoneNumbers = async () => {
     try {
@@ -127,25 +111,6 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  const handleToggleSelection = (phoneNumber: PhoneNumber) => {
-    console.log(phoneNumber.id,'numero seleccionado');
-    setSelectedPhoneNumbers(prev => 
-      prev.some(p => p.id === phoneNumber.id)
-        ? prev.filter(p => p.id !== phoneNumber.id)
-        : [...prev, phoneNumber]
-    );
-  };
-
-  const handleEdit = (phoneNumber: PhoneNumber) => {
-    setSelectedPhoneNumber(phoneNumber);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    setDeleteId(id);
-    setIsDeleteDialogOpen(true);
-  };
-
   const handleDeletePhoneNumber = async () => {
     if (!deleteId) return;
     
@@ -164,21 +129,6 @@ export const HomePage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const openEditForm = (phoneNumber: PhoneNumber) => {
-    setSelectedPhoneNumber(phoneNumber);
-    setIsFormOpen(true);
-  };
-
-  const openCreateForm = () => {
-    setSelectedPhoneNumber(undefined);
-    setIsFormOpen(true);
-  };
-
-  const openDeleteDialog = (id: number) => {
-    setDeleteId(id);
-    setIsDeleteDialogOpen(true);
   };
 
   const closeForm = () => {
@@ -203,7 +153,7 @@ export const HomePage: React.FC = () => {
         </motion.div>
         <div className="flex items-center space-x-2">
         <AnimatePresence>
-          {selectedPhoneNumbers.length > 0 && (
+          {/* {selectedPhoneNumbers.length > 0 && (
             <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -216,10 +166,10 @@ export const HomePage: React.FC = () => {
               <SquareCheckBig className="w-4 h-4" />
               <span>Empezar validacion</span>
             </motion.button>
-          )}
+          )} */}
         </AnimatePresence>
 
-        <motion.button
+        {/* <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ scale: 1.02 }}
@@ -229,12 +179,12 @@ export const HomePage: React.FC = () => {
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Número</span>
-        </motion.button>
+        </motion.button> */}
         </div>
       </div>
 
       {/* Filters */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -293,23 +243,12 @@ export const HomePage: React.FC = () => {
               onClick={() => loadPhoneNumbers()}
               className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               disabled={isLoading}
-              title="Actualizar"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
-            >
-              {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-            </motion.button>
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -331,20 +270,10 @@ export const HomePage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence>
-              {filteredPhoneNumbers.map((phone) => (
-                <PhoneNumberCard
-                  key={phone.id}
-                  viewMode={viewMode}
-                  phoneNumber={phone}
-                  onEdit={() => handleEdit(phone)}
-                  onDelete={() => handleDelete(phone.id)}
-                  isSelected={selectedPhoneNumbers.some(p => p.id === phone.id)}
-                  onToggleSelection={handleToggleSelection}
-                />
-              ))}
+             
             </AnimatePresence>
           </motion.div>
         ) : (
@@ -366,16 +295,6 @@ export const HomePage: React.FC = () => {
                 : 'Comienza agregando tu primer número de teléfono'
               }
             </p>
-            {(!searchTerm && statusFilter === 'all') && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={openCreateForm}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Agregar Número
-              </motion.button>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
