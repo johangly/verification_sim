@@ -1,17 +1,24 @@
 export interface PhoneNumber {
   id: number;
   phoneNumber: string;
-  status: 'no verificado' | 'verificado' | 'por verificar';
+  status: PhoneNumberStatus;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreatePhoneNumberRequest {
   phoneNumber: string;
-  status?: 'no verificado' | 'verificado' | 'por verificar';
+  status?: PhoneNumberStatus;
+}
+
+export interface CreatePhoneNumberByFileRequest {
+  file: File;
+  status?: PhoneNumberStatus | undefined;
 }
 
 export interface UpdatePhoneNumberRequest {
   phoneNumber?: string;
-  status?: 'no verificado' | 'verificado' | 'por verificar';
+  status?: PhoneNumberStatus;
 }
+
+export type PhoneNumberStatus = 'no verificado' | 'verificado' | 'por verificar';

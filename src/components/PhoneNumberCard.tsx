@@ -52,7 +52,7 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4,delay: Number(index) * 0.1, type: 'spring', stiffness: 100 }}
+      transition={{ duration: 0.4,delay: Number(index) * 0.02, type: 'spring', stiffness: 100 }}
       key={phoneNumber.id} 
       className={cn(
         "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors",

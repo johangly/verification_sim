@@ -3,6 +3,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme{
+  --animate-hidegap: hidegap .3s cubic-bezier(0.77,0,0.18,1) forwards;
+  @keyframes hidegap {
+    0% {
+      gap: 40px;
+    }
+    90% {
+      gap: 40px;
+    }
+    100% {
+      gap: 0;
+    }
+  }
+
   --animate-slideOutLeft: slideOutLeft .5s cubic-bezier(0.77,0,0.18,1) forwards;
   @keyframes slideOutLeft {
     0% {
@@ -147,6 +160,26 @@
 }
 
 @layer base {
+  
+  :root {
+    --estado-verificado: var(--color-green-600);
+    --estado-noVerificado: var(--color-red-600);
+    --estado-porVerificar: var(--color-yellow-600);
+    --chart-1: var(--color-green-800);
+    --chart-2: var(--color-red-800);
+    --chart-3: var(--color-yellow-800);
+    --chart-4: var(--color-blue-800);
+    --chart-5: var(--color-purple-800);
+  }
+
+  .dark {
+    --chart-1: var(--color-green-800);
+    --chart-2: var(--color-red-800);
+    --chart-3: var(--color-yellow-800);
+    --chart-4: var(--color-blue-800);
+    --chart-5: var(--color-purple-800);
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
