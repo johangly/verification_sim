@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, RefreshCw, SquareCheckBig, List, LayoutGrid, Upload,SlidersHorizontal, X } from 'lucide-react';
+import { Plus, Search, RefreshCw, SquareCheckBig, List, LayoutGrid, Upload,SlidersHorizontal, X } from 'lucide-react';
 import { PhoneNumber } from '../types/phoneNumber';
 import { phoneNumberService } from '../services/api';
 import { messagesService } from '../services/messagesService';
@@ -176,7 +176,9 @@ export const HomePage: React.FC = () => {
   /**
    * Maneja la creación de un nuevo número telefónico
    */
-  const handleCreatePhoneNumber = async (data: any) => {
+  const handleCreatePhoneNumber = async (data: {
+    phoneNumber: string, status: PhoneNumberStatus,
+}) => {
     setIsSubmitting(true);
     try {
       await phoneNumberService.createPhoneNumber(data);
@@ -218,7 +220,7 @@ export const HomePage: React.FC = () => {
   /**
    * Maneja la actualización de un número telefónico existente
    */
-  const handleUpdatePhoneNumber = async (data: any): Promise<boolean> => {
+  const handleUpdatePhoneNumber = async (data: { phoneNumber: string, status: PhoneNumberStatus }): Promise<boolean> => {
     if (!selectedPhoneNumber) {
       toast.error('No se ha seleccionado un número de teléfono');
       return false;
@@ -531,7 +533,7 @@ export const HomePage: React.FC = () => {
               {filteredPhoneNumbers.map((phone,index) => (
                 <PhoneNumberCard
                   key={phone.id}
-                  index={index}
+                  index={`${index}-${statusFilter}-${searchTerm}`}
                   viewMode={viewMode}
                   phoneNumber={phone}
                   onEdit={() => handleEdit(phone)}
@@ -576,7 +578,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Advance filters */}
-     <AnimatePresence>
+      <AnimatePresence>
       {showAdvandeFilter && (
           <motion.div 
           initial={{ width:0, x:20,opacity: 0 }}
@@ -710,10 +712,10 @@ export const HomePage: React.FC = () => {
               </motion.button>
             </div>
           </div>
-         
+          
         </motion.div>
       )}
-     </AnimatePresence>
+      </AnimatePresence>
       {/* Form Modal */}
       <PhoneNumberForm
         isOpen={isFormOpen}

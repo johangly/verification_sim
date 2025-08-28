@@ -4,7 +4,6 @@ import { Edit, Trash2, Phone, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { PhoneNumber } from '../types/phoneNumber';
 import { Checkbox } from "./ui/checkbox";
 import { cn } from '../lib/utils';
-import { twMerge } from 'tailwind-merge';
 
 interface PhoneNumberCardBaseProps {
   phoneNumber: PhoneNumber;
@@ -14,7 +13,7 @@ interface PhoneNumberCardBaseProps {
   onToggleSelection: (phoneNumber: PhoneNumber) => void;
   children?: ReactNode;
   className?: string;
-  index?: number;
+  index?: string;
 }
 
 interface GridViewProps extends PhoneNumberCardBaseProps {

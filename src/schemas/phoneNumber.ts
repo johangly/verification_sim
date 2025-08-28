@@ -9,18 +9,15 @@ export const phoneNumberSchema = z.object({
     .regex(phoneRegex, 'El número de teléfono no tiene un formato válido'),
   status: z
     .enum(['no verificado', 'verificado', 'por verificar'])
-    .optional()
     .default('por verificar'),
 });
 
 export const updatePhoneNumberSchema = z.object({
   phoneNumber: z
     .string()
-    .regex(phoneRegex, 'El número de teléfono no tiene un formato válido')
-    .optional(),
+    .regex(phoneRegex, 'El número de teléfono no tiene un formato válido'),
   status: z
-    .enum(['no verificado', 'verificado', 'por verificar'])
-    .optional(),
+    .enum(['no verificado', 'verificado', 'por verificar']),
 });
 
 export type PhoneNumberFormData = z.infer<typeof phoneNumberSchema>;

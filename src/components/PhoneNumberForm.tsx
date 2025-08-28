@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Plus } from 'lucide-react';
 import { phoneNumberSchema, updatePhoneNumberSchema } from '../schemas/phoneNumber';
-import { PhoneNumber } from '../types/phoneNumber';
-import { z } from 'zod';
+import { PhoneNumber, PhoneNumberStatus } from '../types/phoneNumber';
 import { toast } from 'react-hot-toast';
 
 interface PhoneNumberFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (data: { phoneNumber: string; status: PhoneNumberStatus }) => Promise<boolean>;
   phoneNumber?: PhoneNumber;
   isLoading?: boolean;
 }
@@ -21,7 +20,6 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
   phoneNumber,
   isLoading = false,
 }) => {
-  type PhoneNumberStatus = 'no verificado' | 'verificado' | 'por verificar';
   
   const [formData, setFormData] = useState<{
     phoneNumber: string;
