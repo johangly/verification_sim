@@ -19,6 +19,11 @@ import {
   CardHeader,
   CardTitle,
 } from '../components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../components/ui/tooltip"
 import { statisticsService } from '../services/stadistics';
 
 export const description = "A pie chart with a label"
@@ -341,46 +346,53 @@ export const StadisticsPage: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence>
-            <Card className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
-              <CardHeader className="flex items-center justify-between pb-0">
-                <div className="flex flex-col">
-                  <CardTitle>Estado de clientes</CardTitle>
-                  <CardDescription>Ultimos 30 dias</CardDescription>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => fetchGeneralStatistics('refresh')}
-                  className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </motion.button>
-              </CardHeader>
-              <CardContent className="flex-1 pb-0">
-                <ChartContainer
-                  config={chartConfig}
-                  className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
-                >
-                  <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                    <Pie data={chartData} dataKey="cantidad" label nameKey="estado" />
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-              <CardFooter className="flex-col gap-2 text-sm">
-                <div className="flex items-center gap-2 leading-none font-regular">
-                  {generalStatistics && <p className='text-center'>
-                    en los ultimos 30 dias de<span className='font-bold ml-1'>{ totalDeClientes }</span> clientes, el<span className='font-bold ml-1'>{calcularPorcentajeVerificados(generalStatistics)}</span> estan verificados 
-                    
-                  </p>
-                } <TrendingUp className="h-4 w-4" />
-                </div>
-                <div className="text-muted-foreground leading-none">
-                  Total de clientes los ultimos 30 dias
-                </div>
-              </CardFooter>
-            </Card>
+              <Card className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
+                <CardHeader className="flex items-center justify-between pb-0">
+                  <div className="flex flex-col">
+                    <CardTitle>Estado de clientes</CardTitle>
+                    <CardDescription>Ultimos 30 dias</CardDescription>
+                  </div>
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => fetchGeneralStatistics('refresh')}
+                      className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      disabled={isLoading}
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent side='top' sideOffset={5}>
+                      <p className='max-w-xs'>Vuelve a calcular los datos (ten en cuenta que esto representa un consumo considerable de los recursos del servidor segun la cantidad de datos que se procesen, este calculo se hace automaticamente cada 6 horas)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardHeader>
+                <CardContent className="flex-1 pb-0">
+                  <ChartContainer
+                    config={chartConfig}
+                    className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
+                  >
+                    <PieChart>
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                      <Pie data={chartData} dataKey="cantidad" label nameKey="estado" />
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter className="flex-col gap-2 text-sm">
+                  <div className="flex items-center gap-2 leading-none font-regular">
+                    {generalStatistics && <p className='text-center'>
+                      en los ultimos 30 dias de<span className='font-bold ml-1'>{ totalDeClientes }</span> clientes, el<span className='font-bold ml-1'>{calcularPorcentajeVerificados(generalStatistics)}</span> estan verificados 
+                      
+                    </p>
+                  } <TrendingUp className="h-4 w-4" />
+                  </div>
+                  <div className="text-muted-foreground leading-none">
+                    Total de clientes los ultimos 30 dias
+                  </div>
+                </CardFooter>
+              </Card>
             </AnimatePresence>
           </motion.div>
         ) : (
@@ -406,14 +418,7 @@ export const StadisticsPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Form Modal */}
-      <PhoneNumberForm
-        isOpen={isFormOpen}
-        onClose={closeForm}
-        onSubmit={selectedPhoneNumber ? handleUpdatePhoneNumber : handleCreatePhoneNumber}
-        phoneNumber={selectedPhoneNumber}
-        isLoading={isSubmitting}
-      />
+
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

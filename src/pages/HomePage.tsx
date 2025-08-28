@@ -27,6 +27,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../components/ui/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../components/ui/tooltip"
+
 import { useTheme } from '../contexts/ThemeContext';
 
 export const HomePage: React.FC = () => {
@@ -338,6 +344,8 @@ export const HomePage: React.FC = () => {
         <div className="flex items-center space-x-2">
           <AnimatePresence>
             {selectedPhoneNumbers.length > 0 && (
+              <Tooltip delayDuration={500}>
+              <TooltipTrigger>
               <motion.button
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -350,6 +358,11 @@ export const HomePage: React.FC = () => {
                 <SquareCheckBig className="w-4 h-4" />
                 <span>Empezar validacion</span>
               </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side='bottom'>
+                <p className='max-w-xs'>Envia un mensaje de WhatsApp a todos los numeros de telefono de los clientes seleccionados para validar si el numero es valido y/o esta en uso, segun la respuesta del cliente se actualizara el estado.</p>
+              </TooltipContent>
+            </Tooltip>
             )}
           </AnimatePresence>
 
@@ -364,17 +377,25 @@ export const HomePage: React.FC = () => {
             <Plus className="w-4 h-4" />
             <span>Agregar Cliente</span>
           </motion.button>
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={openFileForm}
-            className="bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
-          >
-            <Upload className="w-4 h-4" />
-            <span>Subir CSV</span>
-          </motion.button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger>
+              <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={openFileForm}
+              className="bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Subir CSV</span>
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Crea clientes a partir de un archivo CSV</p>
+            </TooltipContent>
+          </Tooltip>
+         
         </div>
         </div>
 
@@ -396,64 +417,91 @@ export const HomePage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                if (areAllSelected) {
-                  setSelectedPhoneNumbers([]);
-                  setAreAllSelected(false);
-                } else {
-                  setSelectedPhoneNumbers(filteredPhoneNumbers);
-                  setAreAllSelected(true);
-                }
-              }}
-              className={twMerge(
-                'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
-                areAllSelected ? 'bg-gray-200 dark:bg-gray-600' : ''
-              )}
-            >
-              <SquareCheckBig className="w-4 h-4" />
-              <span>{areAllSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}</span>
-            </motion.button>
-
+            <Tooltip delayDuration={500}>
+              <TooltipTrigger>
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    if (areAllSelected) {
+                      setSelectedPhoneNumbers([]);
+                      setAreAllSelected(false);
+                    } else {
+                      setSelectedPhoneNumbers(filteredPhoneNumbers);
+                      setAreAllSelected(true);
+                    }
+                  }}
+                  className={twMerge(
+                    'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
+                    areAllSelected ? 'bg-gray-200 dark:bg-gray-600' : ''
+                  )}
+                >
+                  <SquareCheckBig className="w-4 h-4" />
+                  <span>{areAllSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}</span>
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{areAllSelected ? 'Deseleccionar todos los clientes mostrados' : 'Seleccionar todos los clientes mostrados'}</p>
+              </TooltipContent>
+            </Tooltip>
             <div className="flex items-center space-x-3">
-              <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowAdvandeFilter(!showAdvandeFilter)}
-              className={twMerge(
-                'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
-                showAdvandeFilter === true ? 'bg-gray-200 dark:bg-gray-600' : ''
-              )}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>Filtros Avanzados</span>
-            </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => loadPhoneNumbers()}
-                className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                disabled={isLoading}
-                title="Actualizar"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
-              >
-                {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-              </motion.button>
+              <Tooltip delayDuration={500}>
+                <TooltipTrigger>
+                  <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowAdvandeFilter(!showAdvandeFilter)}
+                  className={twMerge(
+                    'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
+                    showAdvandeFilter === true ? 'bg-gray-200 dark:bg-gray-600' : ''
+                  )}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span>Filtros Avanzados</span>
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Mostrar filtros avanzados</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip delayDuration={500}>
+                <TooltipTrigger>
+                  <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => loadPhoneNumbers()}
+                  className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  disabled={isLoading}
+                  title="Actualizar"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Volver a cargar la informacion de los clientes</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip delayDuration={500}>
+                <TooltipTrigger>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                    className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
+                  >
+                    {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cambiar la vista de los clientes</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </motion.div>
