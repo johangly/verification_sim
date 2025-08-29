@@ -1,13 +1,7 @@
 import React, { useState, useEffect,useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, RefreshCw, Search, SquareCheckBig, TrendingUp } from 'lucide-react';
-import { PhoneNumber } from '../types/phoneNumber';
-import { phoneNumberService } from '../services/api';
-import { messagesService } from '../services/messagesService';
-import { PhoneNumberForm } from '../components/PhoneNumberForm';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { toast } from 'react-hot-toast';
-import { twMerge } from 'tailwind-merge';
+import { RefreshCw, TrendingUp, X,Check,CheckCheck, Icon } from 'lucide-react';
+import { CampaignType } from '../types/campaigns';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "../components/ui/chart"
 import { Pie, PieChart } from "recharts"
 import type { TypeStatistics } from '../types/stadistics';
@@ -25,21 +19,34 @@ import {
   TooltipTrigger,
 } from "../components/ui/tooltip"
 import { statisticsService } from '../services/stadistics';
+import { campaignsService } from '../services/campaignsService';
 
-export const description = "A pie chart with a label"
+const messagesStatus={
+  sent:{
+    label:'Enviado',
+    Icon:<Check className='w-4 h-4'/>,
+  },
+  delivered:{
+    label:'Entregado',
+    Icon:<CheckCheck className='w-4 h-4'/>,
+  },
+  failed:{
+    label:'Fallido',
+    Icon:<X className='w-4 h-4'/>,
+  },
+}
 
 export const StadisticsPage: React.FC = () => {
-  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
-  const [filteredPhoneNumbers, setFilteredPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | undefined>();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalStatistics, setGeneralStatistics] = useState<TypeStatistics | undefined>(undefined);
+  const [campaigns, setCampaigns] = useState<CampaignType[] | []>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<CampaignType | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const totalDeClientes = useMemo(() => {
+    if (!generalStatistics) return 0;
+    return generalStatistics.verificado + generalStatistics["no verificado"] + generalStatistics["por verificar"];
+  }, [generalStatistics]);
 
   const chartData = useMemo(() => [
     { estado: "verificado", cantidad: generalStatistics ? generalStatistics.verificado : 0, fill: "var(--estado-verificado)" },
@@ -65,6 +72,54 @@ export const StadisticsPage: React.FC = () => {
     },
   } satisfies ChartConfig
 
+  const StatisticsCard = useMemo(() => (
+    <Card className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
+      <CardHeader className="flex items-center justify-between pb-0">
+        <div className="flex flex-col">
+          <CardTitle>Estado de clientes</CardTitle>
+          <CardDescription>Ultimos 30 dias</CardDescription>
+        </div>
+        <Tooltip delayDuration={500}>
+          <TooltipTrigger disabled={isLoading}>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => fetchGeneralStatistics('refresh')}
+              className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent side='top' sideOffset={5}>
+            <p className='max-w-xs'>Vuelve a calcular los datos (ten en cuenta que esto representa un consumo considerable de los recursos del servidor según la cantidad de datos que se procesen, este cálculo se hace automáticamente cada 6 horas)</p>
+          </TooltipContent>
+        </Tooltip>
+      </CardHeader>
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer
+          config={chartConfig}
+          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
+        >
+          <PieChart>
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <Pie data={chartData} dataKey="cantidad" label nameKey="estado" />
+          </PieChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="flex items-center gap-2 leading-none font-regular">
+          {generalStatistics && <p className='text-center'>
+            en los ultimos 30 dias de<span className='font-bold ml-1'>{totalDeClientes}</span> clientes, el<span className='font-bold ml-1'>{calcularPorcentajeVerificados(generalStatistics)}</span> estan verificados
+          </p>
+          } <TrendingUp className="h-4 w-4" />
+        </div>
+        <div className="text-muted-foreground leading-none">
+          Total de clientes los ultimos 30 dias
+        </div>
+      </CardFooter>
+    </Card>
+  ), [generalStatistics, chartData, isLoading, totalDeClientes]);
+
   function calcularPorcentajeVerificados(stats: TypeStatistics): string {
     const totalNumeros = stats.verificado + stats['no verificado'] + stats['por verificar'];
 
@@ -75,138 +130,58 @@ export const StadisticsPage: React.FC = () => {
     const porcentaje = (stats.verificado / totalNumeros) * 100;
 
     return `${porcentaje.toFixed(2)}%`; // Formatea a dos decimales
-}
-
-  const handleSendMessages = async () => {
-    setIsSubmitting(true);
-    
-    const loadingToast = toast.loading('Enviando mensajes...');
-    
-    try {
-      // const response = await messagesService.sendMessage({ phoneNumbers: phoneNumbersToSend });
-      
-      toast.dismiss(loadingToast);
-      toast.success('Mensajes enviados exitosamente');
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error('Error al enviar mensajes');
-      console.error('Error:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const loadPhoneNumbers = async () => {
-    try {
-      setIsLoading(true);
-      const data = await phoneNumberService.getAllPhoneNumbers();
-      setPhoneNumbers(data);
-      setFilteredPhoneNumbers(data);
-    } catch (error) {
-      console.error('Error loading phone numbers:', error);
-      toast.error('Error al cargar los números de teléfono');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPhoneNumbers();
-    fetchGeneralStatistics();
-  }, []);
-
-  function fetchGeneralStatistics(type: 'cached' | 'refresh' = 'cached') {
-    setIsLoading(true);
-    statisticsService.getGeneralStatistics(type).then(data => {
-      console.log('obteniendo estadisticas:')
-      console.log(data);
-      setGeneralStatistics(data);
-    }).finally(() => {
-      setIsLoading(false);
-    });
   }
 
   useEffect(() => {
-    let filtered = phoneNumbers;
+    const fetchData = async () => {
+      try {
+        const [stats, campaignsData] = await Promise.all([
+          fetchGeneralStatistics(),
+          fetchCampaigns()
+        ]);
+        setCampaigns(campaignsData);
+        setGeneralStatistics(stats);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
-    if (searchTerm) {
-      filtered = filtered.filter(phone =>
-        phone.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(phone => phone.status === statusFilter);
-    }
-
-    setFilteredPhoneNumbers(filtered);
-  }, [phoneNumbers, searchTerm, statusFilter]);
-
-  const handleCreatePhoneNumber = async (data: any) => {
-    setIsSubmitting(true);
-    try {
-      await phoneNumberService.createPhoneNumber(data);
-      await loadPhoneNumbers();
-      toast.success('Número de teléfono creado exitosamente');
-      return true;
-    } catch (error) {
-      console.error('Error creating phone number:', error);
-      toast.error('Error al crear el número de teléfono');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdatePhoneNumber = async (data: any): Promise<boolean> => {
-    if (!selectedPhoneNumber) {
-      toast.error('No se ha seleccionado un número de teléfono');
-      return false;
-    }
     
-    setIsSubmitting(true);
-    try {
-      await phoneNumberService.updatePhoneNumber(selectedPhoneNumber.id, data);
-      await loadPhoneNumbers();
-      toast.success('Número de teléfono actualizado exitosamente');
-      return true;
-    } catch (error) {
-      console.error('Error updating phone number:', error);
-      toast.error('Error al actualizar el número de teléfono');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  async function fetchCampaigns() {
+    setIsLoading(true);
+    return campaignsService.getCampaigns().then(data => {
+      console.log('obteniendo campañas:');
+      console.log(data);
+      setIsLoading(false);
+      return data; // Asegúrate de retornar los datos
+    }).catch(error => {
+      console.error('Error fetching campaigns:', error);
+      setIsLoading(false);
+      throw error; // Propaga el error para que se maneje en el catch del Promise.all
+    });
+  }
 
-  const handleDeletePhoneNumber = async () => {
-    if (!deleteId) return;
-    
-    setIsSubmitting(true);
-    try {
-      await phoneNumberService.deletePhoneNumber(deleteId);
-      await loadPhoneNumbers();
-      toast.success('Número de teléfono eliminado exitosamente');
-      setIsDeleteDialogOpen(false);
-      setDeleteId(null);
-      return true;
-    } catch (error) {
-      console.error('Error deleting phone number:', error);
-      toast.error('Error al eliminar el número de teléfono');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  async function fetchGeneralStatistics(type: 'cached' | 'refresh' = 'cached') {
+    setIsLoading(true);
+    return statisticsService.getGeneralStatistics(type)
+      .then((data: TypeStatistics) => {
+        console.log('obteniendo estadisticas:');
+        setGeneralStatistics(data);
+        return data; // Asegúrate de devolver los datos
+      })
+      .catch(error => {
+        console.error('Error fetching general statistics:', error);
+        throw error; // Propaga el error para que se maneje en el catch del Promise.all
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }
 
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setSelectedPhoneNumber(undefined);
-  };
 
-  const totalDeClientes = useMemo(() => {
-    return generalStatistics ? generalStatistics.verificado + generalStatistics['no verificado'] + generalStatistics['por verificar'] : 0;
-  }, [generalStatistics]);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -222,106 +197,7 @@ export const StadisticsPage: React.FC = () => {
             Estadisticas de los numeros de telefono registrados y validados
           </p>
         </motion.div>
-        <div className="flex items-center space-x-2">
-         
-        <AnimatePresence>
-          
-          {/* {selectedPhoneNumbers.length > 0 && (
-            <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            exit={{ opacity: 0, x: -20 }}
-            onClick={handleSendMessages}
-            className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center space-x-2"
-            >
-              <SquareCheckBig className="w-4 h-4" />
-              <span>Empezar validacion</span>
-            </motion.button>
-          )} */}
-        </AnimatePresence>
-
-        {/* <motion.button
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={openCreateForm}
-          className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar Número</span>
-        </motion.button> */}
-        </div>
       </div>
-
-      {/* Filters */}
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-      >
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <input
-              type="text"
-              placeholder="Buscar por número de teléfono..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              if (areAllSelected) {
-                setSelectedPhoneNumbers([]);
-                setAreAllSelected(false);
-              } else {
-                setSelectedPhoneNumbers(filteredPhoneNumbers);
-                setAreAllSelected(true);
-              }
-            }}
-            className={twMerge(
-              'bg-transparent border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 w-[205px]',
-              areAllSelected ? 'bg-gray-200 dark:bg-gray-600' : ''
-            )}
-          >
-            <SquareCheckBig className="w-4 h-4" />
-            <span>{areAllSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}</span>
-          </motion.button>
-
-          <div className="flex items-center space-x-3">
-            <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="verificado">Verificado</option>
-              <option value="por verificar">Por Verificar</option>
-              <option value="no verificado">No Verificado</option>
-            </select>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => loadPhoneNumbers()}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </motion.button>
-          </div>
-        </div>
-      </motion.div> */}
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -338,100 +214,260 @@ export const StadisticsPage: React.FC = () => {
               className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"
             />
           </motion.div>
-        ) : filteredPhoneNumbers.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <AnimatePresence>
-              <Card className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
-                <CardHeader className="flex items-center justify-between pb-0">
-                  <div className="flex flex-col">
-                    <CardTitle>Estado de clientes</CardTitle>
-                    <CardDescription>Ultimos 30 dias</CardDescription>
-                  </div>
-                  <Tooltip delayDuration={500}>
-                    <TooltipTrigger>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => fetchGeneralStatistics('refresh')}
-                      className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      disabled={isLoading}
-                    >
-                      <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    </motion.button>
-                    </TooltipTrigger>
-                    <TooltipContent side='top' sideOffset={5}>
-                      <p className='max-w-xs'>Vuelve a calcular los datos (ten en cuenta que esto representa un consumo considerable de los recursos del servidor segun la cantidad de datos que se procesen, este calculo se hace automaticamente cada 6 horas)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </CardHeader>
-                <CardContent className="flex-1 pb-0">
-                  <ChartContainer
-                    config={chartConfig}
-                    className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
-                  >
-                    <PieChart>
-                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                      <Pie data={chartData} dataKey="cantidad" label nameKey="estado" />
-                    </PieChart>
-                  </ChartContainer>
-                </CardContent>
-                <CardFooter className="flex-col gap-2 text-sm">
-                  <div className="flex items-center gap-2 leading-none font-regular">
-                    {generalStatistics && <p className='text-center'>
-                      en los ultimos 30 dias de<span className='font-bold ml-1'>{ totalDeClientes }</span> clientes, el<span className='font-bold ml-1'>{calcularPorcentajeVerificados(generalStatistics)}</span> estan verificados 
-                      
-                    </p>
-                  } <TrendingUp className="h-4 w-4" />
-                  </div>
-                  <div className="text-muted-foreground leading-none">
-                    Total de clientes los ultimos 30 dias
-                  </div>
-                </CardFooter>
-              </Card>
-            </AnimatePresence>
-          </motion.div>
-        ) : (
+        ) : generalStatistics && totalDeClientes && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="text-center py-12"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            {StatisticsCard}
+          </motion.div>
+          )
+        }
+      </AnimatePresence>
+
+      {/* Header */}
+      {campaigns && (
+        <>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            campañas
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Estas campañas se utilizan para enviar mensajes de confirmación a los clientes.
+          </p>
+        </motion.div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {campaigns.map((campaign) => (
+          <motion.div
+            key={campaign.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Campaña #{campaign.id}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(campaign.createdAt).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">
+                  {campaign.messages.length} mensajes
+                </div>
+              </div>
+              
+              <div className="space-y-3 mt-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plantilla usada</p>
+                  <p className="text-sm text-gray-900 dark:text-white truncate">{campaign.templateUsed || 'Sin plantilla'}</p>
+                </div>
+                {/*<div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</p>
+                  <div className="flex items-center mt-1">
+                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                      campaign.sentAt ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></span>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {campaign.sentAt ? 'Enviada' : 'Pendiente de envío'}
+                    </span>
+                  </div>
+                </div> */}
+                 
+                 <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Creada por</p>
+                  <div className="flex items-center mt-1">
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {campaign.createdByUser === 1 ? 'Admin' : 'Usuario'}
+                    </span>
+                  </div>
+                </div>
+                {campaign.sentAt && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Enviada el</p>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {new Date(campaign.sentAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No se encontraron números
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {searchTerm || statusFilter !== 'all'
-                ? 'Intenta cambiar los filtros de búsqueda'
-                : 'Comienza agregando tu primer número de teléfono'
-              }
-            </p>
+            
+            <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ID: {campaign.id}
+                </span>
+                <button 
+                  onClick={() => {
+                    setSelectedCampaign(campaign);
+                    setIsModalOpen(true);
+                  }}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  Ver detalles
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      </>
+
+        
+      )}
+
+      {/* Modal de Detalles de Campaña */}
+      <AnimatePresence>
+        {isModalOpen && selectedCampaign && (
+          <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setIsModalOpen(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Detalles de la campaña
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ID</p>
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedCampaign.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plantilla usada</p>
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">{selectedCampaign.templateUsed || 'Sin plantilla'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Creada el</p>
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                      {new Date(selectedCampaign.createdAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Creada por</p>
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                      {selectedCampaign.createdByUser === 1 ? 'Admin' : 'Usuario'}
+                    </p>
+                  </div>
+                  {selectedCampaign.sentAt && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Enviada el</p>
+                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {new Date(selectedCampaign.sentAt).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Mensajes enviados</h4>
+                  <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                    {selectedCampaign.messages?.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedCampaign.messages.map((message, index) => (
+                          <div key={index} className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              {message.phoneNumber.phoneNumber}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center mt-1">
+                              <span className='font-semibold mr-2'>Estado del cliente:</span>{message.phoneNumber.status}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center mt-1">
+                              <span className='font-semibold mr-2'>Estado del mensaje:</span>
+                              {messagesStatus[message.messageStatus as keyof typeof messagesStatus] ? (
+                                <>
+                                  <span className='mr-1'>{messagesStatus[message.messageStatus as keyof typeof messagesStatus].Icon}</span>
+                                  {messagesStatus[message.messageStatus as keyof typeof messagesStatus].label}
+                                </>
+                              ) : (
+                                <span className='text-gray-500 dark:text-gray-400'>Estado no encontrado</span>
+                              )}
+                            </p>
+                            {message.sentAt && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Enviado: {new Date(message.sentAt).toLocaleString('es-ES')}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No hay mensajes registrados para esta campaña.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  disabled={isLoading}
+                >
+                  Cerrar
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setDeleteId(null);
-        }}
-        onConfirm={handleDeletePhoneNumber}
-        title="Eliminar Número"
-        message="¿Estás seguro de que quieres eliminar este número de teléfono? Esta acción no se puede deshacer."
-        isLoading={isSubmitting}
-      />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { messagesService } from '../services/messagesService';
 import { PhoneNumberCard } from '../components/PhoneNumberCard';
 import { PhoneNumberForm } from '../components/PhoneNumberForm';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { StartCampaignDialog } from '../components/StartCampaignDialog';
 import { toast } from 'react-hot-toast';
 import { twMerge } from 'tailwind-merge';
 import { PhoneNumberFileForm } from '../components/PhoneNumberFileForm';
@@ -71,6 +72,7 @@ export const HomePage: React.FC = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFileFormOpen, setIsFileFormOpen] = useState(false);
+  const [isStartCampaignDialogOpen, setIsStartCampaignDialogOpen] = useState(false);
 
   const { isDark } = useTheme();
   
@@ -81,7 +83,7 @@ export const HomePage: React.FC = () => {
   /**
    * Maneja el envío de mensajes a los números seleccionados
    */
-  const handleSendMessages = async () => {
+  const handleStartCampaign = async () => {
     if (selectedPhoneNumbers.length === 0) {
       toast.error('No hay números seleccionados para enviar mensajes');
       return;
@@ -114,6 +116,7 @@ export const HomePage: React.FC = () => {
       console.error('Error al enviar mensajes:', error);
     } finally {
       setIsSubmitting(false);
+      setIsStartCampaignDialogOpen(false);
     }
   };
 
@@ -348,18 +351,18 @@ export const HomePage: React.FC = () => {
             {selectedPhoneNumbers.length > 0 && (
               <Tooltip delayDuration={500}>
               <TooltipTrigger>
-              <motion.button
+              <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               exit={{ opacity: 0, x: -20 }}
-              onClick={handleSendMessages}
+              onClick={() => setIsStartCampaignDialogOpen(true)}
               className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center space-x-2"
               >
                 <SquareCheckBig className="w-4 h-4" />
-                <span>Empezar validacion</span>
-              </motion.button>
+                <span>Empezar campaña</span>
+              </motion.div>
               </TooltipTrigger>
               <TooltipContent side='bottom'>
                 <p className='max-w-xs'>Envia un mensaje de WhatsApp a todos los numeros de telefono de los clientes seleccionados para validar si el numero es valido y/o esta en uso, segun la respuesta del cliente se actualizara el estado.</p>
@@ -381,7 +384,7 @@ export const HomePage: React.FC = () => {
           </motion.button>
           <Tooltip delayDuration={500}>
             <TooltipTrigger>
-              <motion.button
+              <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               whileHover={{ scale: 1.02 }}
@@ -391,7 +394,7 @@ export const HomePage: React.FC = () => {
               >
                 <Upload className="w-4 h-4" />
                 <span>Subir CSV</span>
-              </motion.button>
+              </motion.div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Crea clientes a partir de un archivo CSV</p>
@@ -421,7 +424,7 @@ export const HomePage: React.FC = () => {
             </div>
             <Tooltip delayDuration={500}>
               <TooltipTrigger>
-                <motion.button
+                <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   whileHover={{ scale: 1.02 }}
@@ -442,7 +445,7 @@ export const HomePage: React.FC = () => {
                 >
                   <SquareCheckBig className="w-4 h-4" />
                   <span>{areAllSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}</span>
-                </motion.button>
+                </motion.div>
               </TooltipTrigger>
               <TooltipContent>
                 <p>{areAllSelected ? 'Deseleccionar todos los clientes mostrados' : 'Seleccionar todos los clientes mostrados'}</p>
@@ -451,7 +454,7 @@ export const HomePage: React.FC = () => {
             <div className="flex items-center space-x-3">
               <Tooltip delayDuration={500}>
                 <TooltipTrigger>
-                  <motion.button
+                  <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   whileHover={{ scale: 1.02 }}
@@ -464,24 +467,24 @@ export const HomePage: React.FC = () => {
                   >
                     <SlidersHorizontal className="w-4 h-4" />
                     <span>Filtros Avanzados</span>
-                  </motion.button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Mostrar filtros avanzados</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip delayDuration={500}>
-                <TooltipTrigger>
-                  <motion.button
+                <TooltipTrigger disabled={isLoading}>
+                  <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => loadPhoneNumbers()}
                   className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  disabled={isLoading}
+                  
                   title="Actualizar"
                   >
                     <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  </motion.button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Volver a cargar la informacion de los clientes</p>
@@ -489,8 +492,8 @@ export const HomePage: React.FC = () => {
               </Tooltip>
               
               <Tooltip delayDuration={500}>
-                <TooltipTrigger>
-                  <motion.button
+                <TooltipTrigger disabled={isLoading}>
+                  <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
@@ -498,7 +501,7 @@ export const HomePage: React.FC = () => {
                     title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
                   >
                     {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-                  </motion.button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Cambiar la vista de los clientes</p>
@@ -742,6 +745,13 @@ export const HomePage: React.FC = () => {
         onConfirm={handleDeletePhoneNumber}
         title="Eliminar Número"
         message="¿Estás seguro de que quieres eliminar este número de teléfono? Esta acción no se puede deshacer."
+        isLoading={isSubmitting}
+      />
+
+      <StartCampaignDialog
+        isOpen={isStartCampaignDialogOpen}
+        onClose={() => setIsStartCampaignDialogOpen(false)}
+        onConfirm={handleStartCampaign}
         isLoading={isSubmitting}
       />
     </div>
