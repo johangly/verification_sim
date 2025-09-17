@@ -23,6 +23,11 @@ export class CampaignsService {
       method: 'GET',
     });
   }
+  async getCampaignById(id:number):Promise<CampaignType>{
+    return this.request<CampaignType>(`/campaigns/${id}`, {
+      method: 'GET',
+    });
+  }
 }
 
 export const campaignsService = new CampaignsService();

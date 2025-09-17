@@ -3,6 +3,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import { StadisticsPage } from './pages/StadisticsPage';
+import CampaignsPage from './pages/CampaignsPage';
+import CampaignsPageSelected from './pages/CampaignsSelectedPage';
 
 function App() {
   return (
@@ -11,6 +13,8 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/campaigns/:id" element={<CampaignsPageSelected />} />
             <Route path="/estadisticas" element={<StadisticsPage />} />
           </Routes>
         </Layout>

@@ -46,6 +46,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           badge: 0// Ejemplo de badge para notificaciones
         },
         {
+          id:'campañas',
+          label: 'Campañas',
+          icon: GalleryVerticalEnd,
+          path: '/campaigns',
+        },
+        {
           id: 'estadisticas',
           label: 'Estadisticas',
           icon: PieChart,
@@ -88,7 +94,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         isDark={isDark}
         user={{nombre: "Admin", grupo: {nombre_grupo: "Administrador"}}} // Pasar el usuario actual al Sidebar
       />
-      <div className="flex flex-col w-full"> 
+      <div className="flex flex-col w-full">
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="mx-auto px-4 sm:px-6 lg:px-6">
             <div className="flex items-center justify-between h-16">
@@ -148,7 +154,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <main className="flex-1 overflow-auto">
             <div className="p-8">
               <AnimatePresence mode="wait">
-                
+
               </AnimatePresence>
             </div>
           </main>
