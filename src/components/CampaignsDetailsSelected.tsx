@@ -12,7 +12,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "../components/ui/select"
-import { FunnelX } from "lucide-react";
+import { FunnelX,Mails } from "lucide-react";
 
 
 interface buttonsProps {
@@ -71,8 +71,8 @@ export default function CampaignsDetailsSelected() {
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 						>
-							<span className="text-2xl font-bold text-gray-900 dark:text-white">
-								Campaña {selectedCampaign.id}
+							<span className="text-2xl font-bold text-gray-900 dark:text-white flex justify-start items-center">
+								Campaña {selectedCampaign.id} <Mails className="inline ml-2 text-gray-900 dark:text-white" size={25} />
 							</span>
 						</motion.div>
 						<div className="flex space-x-3 space-y-3 items-start justify-start gap-3">
@@ -84,7 +84,7 @@ export default function CampaignsDetailsSelected() {
 								className='flex flex-col justify-center items-start space-y-2 w-full'>
 								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">REGIÓN</label>
 								<Select value={region} onValueChange={setRegion}>
-									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 										<SelectValue placeholder="Selecciona una región" />
 									</SelectTrigger>
 									<SelectContent className='bg-white dark:bg-gray-700'>
@@ -103,7 +103,7 @@ export default function CampaignsDetailsSelected() {
 								className='flex flex-col justify-center items-start space-y-2 w-full'>
 								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">CIUDAD</label>
 								<Select value={ciudad} onValueChange={setCiudad}>
-									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 										<SelectValue placeholder="Selecciona una ciudad" />
 									</SelectTrigger>
 									<SelectContent className='bg-white dark:bg-gray-700'>
@@ -122,7 +122,7 @@ export default function CampaignsDetailsSelected() {
 								className='flex flex-col justify-center items-start space-y-2 w-full'>
 								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">VENDEDOR</label>
 								<Select value={vendedor} onValueChange={setVendedor}>
-									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+									<SelectTrigger style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full max-w-[200px] min-w-[200px] border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 										<SelectValue placeholder="Selecciona un vendedor" />
 									</SelectTrigger>
 									<SelectContent className='bg-white dark:bg-gray-700'>
@@ -144,9 +144,8 @@ export default function CampaignsDetailsSelected() {
 									exit={{ opacity: 0, y: -20 }}
 									transition={{ duration: 0.2, delay: index * 0.1 }}
 									type="button"
-									className={twMerge(`px-4 flex flex-wrap min-w-[100px] flex-1 gap-8 items-center h-18 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors`,
-										buttonSelected === btn.value
-										&& "bg-blue-600 text-white",
+									className={twMerge(`px-4 flex flex-wrap min-w-[100px] flex-1 gap-8 items-center h-18 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors cursor-pointer`,
+										buttonSelected === btn.value ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-800",
 									)}
 									title={btn.label.toLowerCase()}
 									onClick={() =>
