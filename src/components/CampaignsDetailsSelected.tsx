@@ -1,11 +1,10 @@
 import useCampaigns from "../hooks/useCampaigns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import LoadingSpinner from "./LoadingSpinner";
 import { useEffect, useState } from "react";
 import { CampaignsMessageType } from "../types/campaigns";
 import { PhoneNumberCard } from "./PhoneNumberCard";
 import { twMerge } from "tailwind-merge";
-
 import {
 	Select,
 	SelectContent,
@@ -190,7 +189,7 @@ export default function CampaignsDetailsSelected() {
 						</div>
 						<div className="w-full flex flex-col gap-3 mt-4">
 							{phonesByStatus.length === 0 ? (
-								<motion.div 
+								<motion.div
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: -20 }}

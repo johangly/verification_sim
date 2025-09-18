@@ -5,7 +5,7 @@ import useCampaigns from "../hooks/useCampaigns";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function CampaignsPage() {
-	const { campaigns, navigate,loading } = useCampaigns();
+	const { allCampaigns, navigate,loading } = useCampaigns();
 		if(loading) return <LoadingSpinner />;
 
 	return (
@@ -39,7 +39,7 @@ export default function CampaignsPage() {
 					</motion.button>
 				</div>
 				<div className="dark:bg-gray-800 rounded-lg  w-full">
-						{campaigns.map((campaign) => (
+						{allCampaigns.map((campaign) => (
 							<CampaignCard
 								key={campaign.id}
 								campaign={campaign}

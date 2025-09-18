@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 export default function useCampaigns() {
 	const navigate = useNavigate();
 	const { id } = useParams();
-	const [campaigns, setCampaigns] = useState<CampaignType[]>([]);
+	const [allCampaigns, setAllCampaigns] = useState<CampaignType[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [selectedCampaign, setSelectedCampaign] =
 		useState<CampaignType | null>(null);
@@ -14,7 +14,7 @@ export default function useCampaigns() {
 		setLoading(true);
 		try {
 			const campaigns = await campaignsService.getCampaigns();
-			setCampaigns(campaigns);
+			setAllCampaigns(campaigns);
 		} catch (error) {
 			console.error("Error fetching campaigns:", error);
 		} finally {
@@ -45,7 +45,7 @@ export default function useCampaigns() {
 		getAllCampaigns();
 	}, []);
 	return {
-		campaigns,
+		allCampaigns,
 		navigate,
 		selectedCampaign,
 		loading,
