@@ -24,7 +24,7 @@ import { StartCampaignDialog } from "../components/StartCampaignDialog";
 
 export default function CampaignsPage() {
 
-	const { campaigns, navigate, loading } = useCampaigns();
+	const { allCampaigns, loading } = useCampaigns();
 	const [createNewCampaign, setCreateNewCampaign] = useState(false);
 
 	if (loading) return <LoadingSpinner />;
@@ -36,7 +36,7 @@ export default function CampaignsPage() {
 			)}
 		>
 			<AnimatePresence>
-				{createNewCampaign ? <CampaignForm setCreateNewCampaign={setCreateNewCampaign} /> : <CampaignList campaigns={campaigns} setCreateNewCampaign={setCreateNewCampaign} />}
+				{createNewCampaign ? <CampaignForm setCreateNewCampaign={setCreateNewCampaign} /> : <CampaignList campaigns={allCampaigns} setCreateNewCampaign={setCreateNewCampaign} />}
 			</AnimatePresence>
 		</div>
 	);
