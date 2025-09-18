@@ -11,6 +11,7 @@ interface PhoneNumberCardBaseProps {
   onDelete: (id: number) => void;
   isSelected: boolean;
   onToggleSelection: (phoneNumber: PhoneNumber) => void;
+  showSelectBox?: boolean;
   children?: ReactNode;
   className?: string;
   index?: string;
@@ -44,6 +45,7 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
   className,
   index,
   onToggleSelection,
+  showSelectBox
 }) => {
   console.log(index);
   return (
@@ -88,15 +90,17 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
             <Trash2 className="w-4 h-4" />
           </ActionButton>
         </div>
-        <Checkbox 
-          className="w-6 h-6 ml-auto mt-4" 
-          style={{
-            backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
-            borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
-          }} 
-          checked={isSelected} 
-          onCheckedChange={() => onToggleSelection(phoneNumber)} 
-        />
+        {showSelectBox && (
+          <Checkbox 
+            className="w-6 h-6 ml-auto mt-4" 
+            style={{
+              backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
+              borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
+            }} 
+            checked={isSelected} 
+            onCheckedChange={() => onToggleSelection(phoneNumber)} 
+          />
+        )}
       </div>
     </div>
     </motion.div>
@@ -111,6 +115,7 @@ const ListView: React.FC<Omit<ListViewProps, 'children'>> = ({
   className,
   index,
   onToggleSelection,
+  showSelectBox
 }) => {
   return (
     <motion.div
@@ -152,15 +157,17 @@ const ListView: React.FC<Omit<ListViewProps, 'children'>> = ({
         <ActionButton onClick={() => onDelete(phoneNumber.id)} color="red">
           <Trash2 className="w-4 h-4" />
         </ActionButton>
-        <Checkbox 
-          className="w-6 h-6 ml-2" 
-          style={{
-            backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
-            borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
-          }} 
-          checked={isSelected} 
-          onCheckedChange={() => onToggleSelection(phoneNumber)} 
-        />
+        {showSelectBox && (
+          <Checkbox 
+            className="w-6 h-6 ml-2" 
+            style={{
+              backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
+              borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
+            }} 
+            checked={isSelected} 
+            onCheckedChange={() => onToggleSelection(phoneNumber)} 
+          />
+        )}
       </div>
     </div>
     </motion.div>
@@ -196,6 +203,7 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
   onDelete,
   isSelected,
   onToggleSelection,
+  showSelectBox = true,
 }) => {
   const commonProps = {
     phoneNumber,
@@ -204,6 +212,7 @@ export const PhoneNumberCard: React.FC<PhoneNumberCardProps> = ({
     onDelete,
     isSelected,
     onToggleSelection,
+    showSelectBox,
   };
   return (
     <PhoneNumberCardBase {...commonProps}>

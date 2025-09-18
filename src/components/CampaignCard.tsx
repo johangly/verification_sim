@@ -12,13 +12,13 @@ export default function CampaignCard({
 	const navigate = useNavigate();
 
 	return (
-		<motion.button 
-		initial={{ opacity: 0, y: 20 }}
-		animate={{ opacity: 1, y: 0 }}
-		exit={{ opacity: 0, y: -20 }}
-		transition={{ duration: 0.4,delay: Number(campaign.id) * 0.02, type: 'spring', stiffness: 100 }}
-		key={campaign.id} 
-		className="flex shadow-sm justify-between p-4 w-full mb-2 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+		<motion.div 
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			exit={{ opacity: 0, y: -20 }}
+			transition={{ duration: 0.4,delay: Number(campaign.id) * 0.02, type: 'spring', stiffness: 100 }}
+			key={campaign.id} 
+			className="flex shadow-sm justify-between p-4 w-full mb-2 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
 			onClick={() => navigate(`/campaigns/${campaign.id}`)}
 		>
 			<div className="flex flex-col w-[50%] items-start">
@@ -62,6 +62,6 @@ export default function CampaignCard({
 					<ChevronRight className="w-6 h-6 text-gray-900 dark:text-white" />
 				</button>
 			</div>
-		</motion.button>
+		</motion.div>
 	);
 }
