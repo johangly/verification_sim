@@ -332,7 +332,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className={twMerge("w-full flex justify-center items-start gap-5")}>
       {/* Principal content */}
-      <div className='max-w-6xl space-y-6'>
+      <div className='max-w-4xl w-full space-y-6'>
         {/* header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <motion.div
