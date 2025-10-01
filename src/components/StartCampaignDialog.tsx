@@ -40,10 +40,11 @@ export function StartCampaignDialog({
               </h3>
             </div>
             
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-700 dark:text-gray-200 mb-6">
               ¿Estás seguro de que deseas iniciar una nueva campaña? Se enviarán 
-              mensajes a todos los números seleccionados.
+              mensajes a todos los clientes en la campaña.
             </p>
+            <p className="text-gray-500 text-sm dark:text-gray-400 mb-6"><strong className="font-medium">Advertencia:</strong> solo se puede enviar un mensaje de verificacion por cada cliente, se omitira el envio de mensaje de verificacion a los clientes que ya recibieron el mensaje de verificacion.</p>
             
             <div className="flex space-x-3">
               <motion.button

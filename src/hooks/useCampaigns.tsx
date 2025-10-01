@@ -49,5 +49,6 @@ export default function useCampaigns() {
 		navigate,
 		selectedCampaign,
 		loading,
+		setLoading
 	};
 }

@@ -48,10 +48,14 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 	const [isLoading, setIsLoading] = useState(false);
 	const [filteredPhoneNumbers, setFilteredPhoneNumbers] = useState<PhoneNumber[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [statusFilter, setStatusFilter] = useState<PhoneNumberStatus | 'all'>('all');
+	const [sendingCreateCampaign, setSendingCreateCampaign] = useState(false);
+	const [
+		statusFilter,
+		// setStatusFilter
+	] = useState<PhoneNumberStatus | 'all'>('all');
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 	const [isFormOpen, setIsFormOpen] = useState(false);
-	const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | undefined>();
+	const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | undefined>(undefined);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [deleteId, setDeleteId] = useState<number | null>(null);
 	const [isStartCampaignDialogOpen, setIsStartCampaignDialogOpen] = useState(false);
@@ -227,40 +231,42 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 		}
 	};
 
-	  const handleStartCampaign = async () => {
+	const handleStartCampaign = async () => {
 		if (phoneNumbers.length === 0) {
-		  toast.error('No hay números seleccionados para enviar mensajes');
-		  return;
+			toast.error('No hay números seleccionados para enviar mensajes');
+			return;
 		}
-		
-		setIsLoading(true);
-		
+
+		setSendingCreateCampaign(true);
+
 		const loadingToast = toast.loading('Enviando mensajes...');
-		
+
 		try {
-		//   const response = await messagesService.sendMessage({ phoneNumbers: phoneNumbers });
-		  
-		  // Actualizar la lista de números con los estados actualizados
-		//   setPhoneNumbers(prev => {
-		// 	const updatedNumbers = response.updatedNumbers as PhoneNumber[];
-		// 	return prev.map((phone: PhoneNumber) => {
-		// 	  const updatedPhone = updatedNumbers.find((up: PhoneNumber) => up.id === phone.id);
-		// 	  return updatedPhone ? { ...phone, ...updatedPhone } : phone;
-		// 	});
-		//   });
-		  
-		//   toast.dismiss(loadingToast);
-		  toast.success('Mensajes enviados exitosamente');
+			const response = await campaignsService.createFullCampaign({ phoneNumbers: phoneNumbers });
+			console.log('respuesta de la creacion de campaigns nueva', response)
+			if (response.status === 'success') {
+				toast.dismiss(loadingToast);
+				toast.success('Mensajes enviados exitosamente');
+				setPhoneNumbers([]);
+				setCreateNewCampaign(false);
+				setIsStartCampaignDialogOpen(false);
+				setSelectedPhoneNumber(undefined);
+				setSendingCreateCampaign(false);
+			} else {
+				toast.dismiss(loadingToast);
+				toast.error('Error al enviar mensajes');
+				setSendingCreateCampaign(false);
+			}
 		} catch (error) {
-		  toast.dismiss(loadingToast);
-		  toast.error('Error al enviar mensajes');
-		  console.error('Error al enviar mensajes:', error);
+			toast.dismiss(loadingToast);
+			toast.error('Error al enviar mensajes');
+			console.error('Error al enviar mensajes:', error);
 		} finally {
-		  setIsLoading(false);
-		  setIsStartCampaignDialogOpen(false);
+			setSendingCreateCampaign(false);
+			setIsStartCampaignDialogOpen(false);
 		}
-	  };
-	
+	};
+
 
 	useEffect(() => {
 		let filtered = phoneNumbers;
@@ -279,166 +285,168 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 	}, [phoneNumbers, searchTerm, statusFilter]);
 
 	return (
-		<motion.div
-			initial={{ opacity: 0, x: 80 }}
-			animate={{ opacity: 1, x: 0 }}
-			exit={{ opacity: 0, x: -80 }}
-			transition={{ duration: 0.5 }}
-			className="max-w-4xl w-full space-y-6"
-		>
-			<div className="flex items-center justify-center space-x-2">
-				<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCreateNewCampaign(false)} className="flex items-center text-blue-600 hover:text-blue-800 dark:text-white bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors cursor-pointer mr-5"><ChevronLeft className="w-6.5 h-6.5" /></motion.button>
-				<div className="mr-auto">
-					<span className="text-2xl font-bold text-gray-900 dark:text-white">Crear Campaña</span>
-					<p className="text-gray-600 dark:text-gray-400 text-sm">Inicia una nueva campaña</p>
+		<>
+			<motion.div
+				initial={{ opacity: 0, x: 80 }}
+				animate={{ opacity: 1, x: 0 }}
+				exit={{ opacity: 0, x: -80 }}
+				transition={{ duration: 0.5 }}
+				className="max-w-4xl w-full space-y-6"
+			>
+
+				<div className="flex items-center justify-center space-x-2">
+					<motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCreateNewCampaign(false)} className="flex items-center text-blue-600 hover:text-blue-800 dark:text-white bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors cursor-pointer mr-5"><ChevronLeft className="w-6.5 h-6.5" /></motion.button>
+					<div className="mr-auto">
+						<span className="text-2xl font-bold text-gray-900 dark:text-white">Crear Campaña</span>
+						<p className="text-gray-600 dark:text-gray-400 text-sm">Inicia una nueva campaña</p>
+					</div>
+					<AnimatePresence>
+						{phoneNumbers.length > 0 && (
+							<Tooltip delayDuration={500}>
+								<TooltipTrigger>
+									<motion.div
+										initial={{ opacity: 0, x: -20 }}
+										animate={{ opacity: 1, x: 0 }}
+										whileHover={{ scale: 1.02 }}
+										whileTap={{ scale: 0.98 }}
+										exit={{ opacity: 0, x: -20 }}
+										onClick={() => setIsStartCampaignDialogOpen(true)}
+										className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center space-x-2"
+									>
+										<SquareCheckBig className="w-4 h-4" />
+										<span>Empezar campaña</span>
+									</motion.div>
+								</TooltipTrigger>
+								<TooltipContent side='bottom'>
+									<p className='max-w-xs'>Envia un mensaje de WhatsApp a todos los numeros de telefono de los clientes seleccionados para validar si el numero es valido y/o esta en uso, segun la respuesta del cliente se actualizara el estado.</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+					</AnimatePresence>
+					<motion.button
+						initial={{ opacity: 0, x: 20 }}
+						animate={{ opacity: 1, x: 0 }}
+						whileHover={{ scale: 1.02 }}
+						whileTap={{ scale: 0.98 }}
+						onClick={openCreateForm}
+						className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center space-x-2"
+					>
+						<Plus className="w-4 h-4" />
+						<span>Agregar Cliente</span>
+					</motion.button>
+					<Tooltip delayDuration={500}>
+						<TooltipTrigger>
+							<motion.div
+								initial={{ opacity: 0, x: 20 }}
+								animate={{ opacity: 1, x: 0 }}
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+								onClick={() => setOpenFileForm(true)}
+								className="bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
+							>
+								<Upload className="w-4 h-4" />
+								<span>Subir CSV</span>
+							</motion.div>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Crea clientes a partir de un archivo CSV</p>
+						</TooltipContent>
+					</Tooltip>
 				</div>
-				<AnimatePresence>
-					{phoneNumbers.length > 0 && (
-						<Tooltip delayDuration={500}>
-							<TooltipTrigger>
-								<motion.div
-									initial={{ opacity: 0, x: -20 }}
-									animate={{ opacity: 1, x: 0 }}
-									whileHover={{ scale: 1.02 }}
-									whileTap={{ scale: 0.98 }}
-									exit={{ opacity: 0, x: -20 }}
-									onClick={() => setIsStartCampaignDialogOpen(true)}
-									className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center space-x-2"
-								>
-									<SquareCheckBig className="w-4 h-4" />
-									<span>Empezar campaña</span>
-								</motion.div>
-							</TooltipTrigger>
-							<TooltipContent side='bottom'>
-								<p className='max-w-xs'>Envia un mensaje de WhatsApp a todos los numeros de telefono de los clientes seleccionados para validar si el numero es valido y/o esta en uso, segun la respuesta del cliente se actualizara el estado.</p>
-							</TooltipContent>
-						</Tooltip>
-					)}
-				</AnimatePresence>
-				<motion.button
+				{/* Filters */}
+				<motion.div
 					initial={{ opacity: 0, x: 20 }}
 					animate={{ opacity: 1, x: 0 }}
-					whileHover={{ scale: 1.02 }}
-					whileTap={{ scale: 0.98 }}
-					onClick={openCreateForm}
-					className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center space-x-2"
+					transition={{ delay: 0.1 }}
+					className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
 				>
-					<Plus className="w-4 h-4" />
-					<span>Agregar Cliente</span>
-				</motion.button>
-				<Tooltip delayDuration={500}>
-					<TooltipTrigger>
-						<motion.div
-							initial={{ opacity: 0, x: 20 }}
-							animate={{ opacity: 1, x: 0 }}
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-							onClick={() => setOpenFileForm(true)}
-							className="bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
-						>
-							<Upload className="w-4 h-4" />
-							<span>Subir CSV</span>
-						</motion.div>
-					</TooltipTrigger>
-					<TooltipContent>
-						<p>Crea clientes a partir de un archivo CSV</p>
-					</TooltipContent>
-				</Tooltip>
-			</div>
-			{/* Filters */}
-			<motion.div
-				initial={{ opacity: 0, x: 20 }}
-				animate={{ opacity: 1, x: 0 }}
-				transition={{ delay: 0.1 }}
-				className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
-			>
-				<div className="flex flex-col sm:flex-row gap-4">
-					<div className="flex-1 relative">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-						<input
-							type="text"
-							placeholder="Buscar por número de teléfono..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-						/>
-					</div>
-					<div className="flex items-center space-x-3">
-						<Tooltip delayDuration={500}>
-							<TooltipTrigger disabled={isLoading}>
-								<motion.button
-									whileHover={{ scale: 1.05 }}
-									whileTap={{ scale: 0.95 }}
-									onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-									className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-									title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
-								>
-									{viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
-								</motion.button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Cambiar la vista de los clientes</p>
-							</TooltipContent>
-						</Tooltip>
-					</div>
-				</div>
-			</motion.div>
-			{/* Content */}
-			<AnimatePresence mode="wait">
-				{isLoading ? (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						className="flex justify-center items-center py-12"
-					>
-						<motion.div
-							animate={{ rotate: 360 }}
-							transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-							className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"
-						/>
-					</motion.div>
-				) : filteredPhoneNumbers.length > 0 ? (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						className={twMerge(viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3')}
-					>
-						{filteredPhoneNumbers.map((phone, index) => (
-							<PhoneNumberCard
-								key={phone.id}
-								index={`${index}-${statusFilter}-${searchTerm}`}
-								viewMode={viewMode}
-								phoneNumber={phone}
-								onEdit={() => handleEdit(phone)}
-								onDelete={() => handleDelete(phone.id)}
-								isSelected={false}
-								showSelectBox={false}
-								onToggleSelection={() => { }}
+					<div className="flex flex-col sm:flex-row gap-4">
+						<div className="flex-1 relative">
+							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+							<input
+								type="text"
+								placeholder="Buscar por número de teléfono..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
 							/>
-						))}
-					</motion.div>
-				) : (
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -20 }}
-						className="text-center py-12"
-					>
-						<div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-							<Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
 						</div>
-						<h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-							No hay clientes aun
-						</h3>
-						<p className="text-gray-600 dark:text-gray-400 mb-4">
-							{searchTerm || statusFilter !== 'all'
-								? 'Intenta cambiar los filtros de búsqueda'
-								: 'Comienza agregando el primer cliente'
-							}
-						</p>
-						{/* {(!searchTerm && statusFilter === 'all') && (
+						<div className="flex items-center space-x-3">
+							<Tooltip delayDuration={500}>
+								<TooltipTrigger disabled={isLoading}>
+									<motion.div
+										whileHover={{ scale: 1.05 }}
+										whileTap={{ scale: 0.95 }}
+										onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+										className="p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+										title={viewMode === 'grid' ? 'Cambiar a vista de lista' : 'Cambiar a vista de cuadrícula'}
+									>
+										{viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+									</motion.div>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Cambiar la vista de los clientes</p>
+								</TooltipContent>
+							</Tooltip>
+						</div>
+					</div>
+				</motion.div>
+				{/* Content */}
+				<AnimatePresence mode="wait">
+					{isLoading ? (
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							className="flex justify-center items-center py-12"
+						>
+							<motion.div
+								animate={{ rotate: 360 }}
+								transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+								className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"
+							/>
+						</motion.div>
+					) : filteredPhoneNumbers.length > 0 ? (
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							className={twMerge(viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3')}
+						>
+							{filteredPhoneNumbers.map((phone, index) => (
+								<PhoneNumberCard
+									key={phone.id}
+									index={`${index}-${statusFilter}-${searchTerm}`}
+									viewMode={viewMode}
+									rounded-lg w-full phoneNumber={phone}
+									onEdit={() => handleEdit(phone)}
+									onDelete={() => handleDelete(phone.id)}
+									isSelected={false}
+									showSelectBox={false}
+									onToggleSelection={() => { }}
+								/>
+							))}
+						</motion.div>
+					) : (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							className="text-center py-12"
+						>
+							<div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+								<Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+							</div>
+							<h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+								No hay clientes aun
+							</h3>
+							<p className="text-gray-600 dark:text-gray-400 mb-4">
+								{searchTerm || statusFilter !== 'all'
+									? 'Intenta cambiar los filtros de búsqueda'
+									: 'Comienza agregando el primer cliente'
+								}
+							</p>
+							{/* {(!searchTerm && statusFilter === 'all') && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -448,38 +456,49 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
                   Agregar Número
                 </motion.button>
               )} */}
-					</motion.div>
-				)}
-			</AnimatePresence>
-			{openFileForm &&
-				<PhoneNumberFileForm isOpen={openFileForm} onClose={() => setOpenFileForm(false)} onSubmit={handleCreatePhoneNumberByFile} isLoading={isLoading} />}
-			{isFormOpen &&
-				<PhoneNumberForm
-					isOpen={isFormOpen}
-					onClose={closeForm}
-					onSubmit={selectedPhoneNumber ? handleUpdatePhoneNumber : handleCreatePhoneNumber}
-					phoneNumber={selectedPhoneNumber}
+						</motion.div>
+					)}
+				</AnimatePresence>
+				{openFileForm &&
+					<PhoneNumberFileForm isOpen={openFileForm} onClose={() => setOpenFileForm(false)} onSubmit={handleCreatePhoneNumberByFile} isLoading={isLoading} />}
+				{isFormOpen &&
+					<PhoneNumberForm
+						isOpen={isFormOpen}
+						onClose={closeForm}
+						onSubmit={selectedPhoneNumber ? handleUpdatePhoneNumber : handleCreatePhoneNumber}
+						phoneNumber={selectedPhoneNumber}
+						isLoading={isLoading}
+					/>
+				}
+				<ConfirmDialog
+					isOpen={isDeleteDialogOpen}
+					onClose={() => {
+						setIsDeleteDialogOpen(false);
+						setDeleteId(null);
+					}}
+					onConfirm={handleDeletePhoneNumber}
+					title="Eliminar Número"
+					message="¿Estás seguro de que quieres eliminar este número de teléfono? Esta acción no se puede deshacer."
 					isLoading={isLoading}
 				/>
-			}
-			<ConfirmDialog
-				isOpen={isDeleteDialogOpen}
-				onClose={() => {
-					setIsDeleteDialogOpen(false);
-					setDeleteId(null);
-				}}
-				onConfirm={handleDeletePhoneNumber}
-				title="Eliminar Número"
-				message="¿Estás seguro de que quieres eliminar este número de teléfono? Esta acción no se puede deshacer."
-				isLoading={isLoading}
-			/>
-			<StartCampaignDialog
-				isOpen={isStartCampaignDialogOpen}
-				onClose={() => setIsStartCampaignDialogOpen(false)}
-				onConfirm={handleStartCampaign}
-				isLoading={isLoading}
-			/>
-		</motion.div>
+				<StartCampaignDialog
+					isOpen={isStartCampaignDialogOpen}
+					onClose={() => setIsStartCampaignDialogOpen(false)}
+					onConfirm={handleStartCampaign}
+					isLoading={isLoading}
+				/>
+			</motion.div>
+			{sendingCreateCampaign && (
+				<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center space-y-8">
+					<div className="max-h-[200px] max-w-[200px]">
+						<LoadingSpinner />
+					</div>
+					<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="">
+						<h1 className="text-2xl font-regular text-gray-900 dark:text-gray-100">Enviando mensajes...</h1>
+					</motion.div>
+				</motion.div>
+			)}
+		</>
 	);
 }
 
@@ -514,7 +533,7 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 					Nueva Campaña
 				</motion.button>
 			</div>
-			<div className="dark:bg-gray-800 rounded-lg  w-full">
+			<div className="rounded-lg  w-full">
 				{campaigns.map((campaign) => (
 					<CampaignCard
 						key={campaign.id}

@@ -48,6 +48,14 @@ export class CampaignsService {
       method: 'GET',
     });
   }
+
+  async createFullCampaign(data:{phoneNumbers:PhoneNumber[]}): Promise<any> {
+    return this.request<PhoneNumber[]>('/campaigns/create-full-campaign', {
+      method: 'POST',
+	  body: JSON.stringify(data),
+    });
+  }
+
   async getCampaignById(id:number):Promise<CampaignType>{
     return this.request<CampaignType>(`/campaigns/${id}`, {
       method: 'GET',
