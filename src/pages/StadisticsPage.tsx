@@ -6,6 +6,8 @@ import {
 	X,
 	Check,
 	CheckCheck,
+	CircleX,
+	MailCheck
 } from "lucide-react";
 import { CampaignType } from "../types/campaigns";
 import {
@@ -60,6 +62,14 @@ const messagesStatus = {
 	delivered: {
 		label: "Entregado",
 		Icon: <CheckCheck className="w-4 h-4" />,
+	},
+	undelivered: {
+		label: "No Entregado",
+		Icon: <CircleX className="w-4 h-4" />
+	},
+	read: {
+		label: "Leído",
+		Icon: <MailCheck className="w-4 h-4" />,
 	},
 	failed: {
 		label: "Fallido",
