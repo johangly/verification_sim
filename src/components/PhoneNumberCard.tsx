@@ -5,6 +5,20 @@ import { PhoneNumber } from '../types/phoneNumber';
 import { Checkbox } from "./ui/checkbox";
 import { cn } from '../lib/utils';
 
+// Función para formatear fechas de manera segura
+const formatDateSafe = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? '' : date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  } catch (error) {
+    return '';
+  }
+};
+
 interface PhoneNumberCardBaseProps {
   phoneNumber: PhoneNumber;
   onEdit: (phoneNumber: PhoneNumber) => void;
@@ -47,14 +61,13 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
   onToggleSelection,
   showSelectBox
 }) => {
-  console.log(index);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4,delay: Number(index) * 0.02, type: 'spring', stiffness: 100 }}
-      key={phoneNumber.id} 
+      transition={{ duration: 0.4, delay: Number(index) * 0.02, type: 'spring', stiffness: 100 }}
       className={cn(
         "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors",
         isSelected && "border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900/20",
@@ -62,47 +75,47 @@ const GridView: React.FC<Omit<GridViewProps, 'children'>> = ({
       )}
     >
       <div className="flex items-start justify-between p-6 h-[164px]">
-      <div className="flex-1">
-        <div className="flex items-center space-x-2 mb-2">
-          <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {phoneNumber.phoneNumber}
-          </h3>
-        </div>
-        
-        <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(phoneNumber.status)}`}>
-          {getStatusIcon(phoneNumber.status)}
-          <span className="capitalize">{phoneNumber.status}</span>
-        </div>
-        
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          <p>Creado: {new Date(phoneNumber.createdAt).toLocaleDateString('es-ES')}</p>
-          <p>Actualizado: {new Date(phoneNumber.updatedAt).toLocaleDateString('es-ES')}</p>
-        </div>
-      </div>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-2">
+            <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {phoneNumber.phoneNumber}
+            </h3>
+          </div>
 
-      <div className="flex flex-col justify-between items-center h-full">
-        <div className="flex space-x-2">
-          <ActionButton onClick={() => onEdit(phoneNumber)} color="blue">
-            <Edit className="w-4 h-4" />
-          </ActionButton>
-          <ActionButton onClick={() => onDelete(phoneNumber.id)} color="red">
-            <Trash2 className="w-4 h-4" />
-          </ActionButton>
+          <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(phoneNumber.status)}`}>
+            {getStatusIcon(phoneNumber.status)}
+            <span className="capitalize">{phoneNumber.status}</span>
+          </div>
+
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <p>Creado: {formatDateSafe(phoneNumber.createdAt)}</p>
+            <p>Actualizado: {formatDateSafe(phoneNumber.updatedAt)}</p>
+          </div>
         </div>
-        {showSelectBox && (
-          <Checkbox 
-            className="w-6 h-6 ml-auto mt-4" 
-            style={{
-              backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
-              borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
-            }} 
-            checked={isSelected} 
-            onCheckedChange={() => onToggleSelection(phoneNumber)} 
-          />
-        )}
+
+        <div className="flex flex-col justify-between items-center h-full">
+          <div className="flex space-x-2">
+            <ActionButton onClick={() => onEdit(phoneNumber)} color="blue">
+              <Edit className="w-4 h-4" />
+            </ActionButton>
+            <ActionButton onClick={() => onDelete(phoneNumber.id)} color="red">
+              <Trash2 className="w-4 h-4" />
+            </ActionButton>
+          </div>
+          {showSelectBox && (
+            <Checkbox
+              className="w-6 h-6 ml-auto mt-4"
+              style={{
+                backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent",
+                borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
+              }}
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelection(phoneNumber)}
+            />
+          )}
+        </div>
       </div>
-    </div>
     </motion.div>
   );
 };
@@ -122,54 +135,53 @@ const ListView: React.FC<Omit<ListViewProps, 'children'>> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4,delay: Number(index) * 0.1, type: 'spring', stiffness: 100 }}
-      key={phoneNumber.id} 
+      transition={{ duration: 0.4, delay: Number(index) * 0.1, type: 'spring', stiffness: 100 }}
       className={cn(
         "bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-colors",
         isSelected && "border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900/20",
         className
       )}
     >
-    <div className="flex items-center justify-between w-full p-4">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="flex items-center gap-2 min-w-[180px]">
-          <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {phoneNumber.phoneNumber}
-          </h3>
-        </div>
-        
-        <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(phoneNumber.status)}`}>
-          {getStatusIcon(phoneNumber.status)}
-          <span className="capitalize">{phoneNumber.status}</span>
-        </div>
-        
-        <div className="flex justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <p>Creado: {new Date(phoneNumber.createdAt).toLocaleDateString('es-ES')}</p>
-          <p>Actualizado: {new Date(phoneNumber.updatedAt).toLocaleDateString('es-ES')}</p>
-        </div>
-      </div>
+      <div className="flex items-center justify-between w-full p-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-2 min-w-[180px]">
+            <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {phoneNumber.phoneNumber}
+            </h3>
+          </div>
 
-      <div className="flex items-center gap-2 ml-4">
-        <ActionButton onClick={() => onEdit(phoneNumber)} color="blue">
-          <Edit className="w-4 h-4" />
-        </ActionButton>
-        <ActionButton onClick={() => onDelete(phoneNumber.id)} color="red">
-          <Trash2 className="w-4 h-4" />
-        </ActionButton>
-        {showSelectBox && (
-          <Checkbox 
-            className="w-6 h-6 ml-2" 
-            style={{
-              backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent", 
-              borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
-            }} 
-            checked={isSelected} 
-            onCheckedChange={() => onToggleSelection(phoneNumber)} 
-          />
-        )}
+          <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(phoneNumber.status)}`}>
+            {getStatusIcon(phoneNumber.status)}
+            <span className="capitalize">{phoneNumber.status}</span>
+          </div>
+
+          <div className="flex justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <p>Creado: {formatDateSafe(phoneNumber.createdAt)}</p>
+            <p>Actualizado: {formatDateSafe(phoneNumber.updatedAt)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          <ActionButton onClick={() => onEdit(phoneNumber)} color="blue">
+            <Edit className="w-4 h-4" />
+          </ActionButton>
+          <ActionButton onClick={() => onDelete(phoneNumber.id)} color="red">
+            <Trash2 className="w-4 h-4" />
+          </ActionButton>
+          {showSelectBox && (
+            <Checkbox
+              className="w-6 h-6 ml-2"
+              style={{
+                backgroundColor: isSelected ? "var(--color-blue-400)" : "transparent",
+                borderColor: isSelected ? "var(--color-blue-400)" : "var(--color-slate-300)"
+              }}
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelection(phoneNumber)}
+            />
+          )}
+        </div>
       </div>
-    </div>
     </motion.div>
 
   );
@@ -186,7 +198,7 @@ const ActionButton: React.FC<{
     onClick={onClick}
     className={cn(
       "p-2 rounded-lg transition-colors",
-      color === 'blue' 
+      color === 'blue'
         ? "text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
         : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
     )}

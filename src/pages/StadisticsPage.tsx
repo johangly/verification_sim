@@ -1339,6 +1339,19 @@ export const StadisticsPage: React.FC = () => {
 																		</span>
 																	)}
 																</p>
+																<p className="text-sm text-gray-600 dark:text-gray-300 flex items-center mt-1">
+																	<span className="font-semibold mr-2">
+																		Respuesta:
+																	</span>
+																	{message.responseReceived}
+																</p>
+																<p className="text-sm text-gray-600 dark:text-gray-300 flex items-center mt-1">
+																	<span className="font-semibold mr-2">
+																		Hora de respuesta:
+																	</span>
+																	{message.respondedAt}
+																</p>
+																
 																{message.sentAt && (
 																	<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
 																		Enviado:{" "}

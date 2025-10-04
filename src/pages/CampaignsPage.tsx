@@ -283,7 +283,7 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 
 		setFilteredPhoneNumbers(filtered);
 	}, [phoneNumbers, searchTerm, statusFilter]);
-
+	console.log('phoneNumbers',phoneNumbers)
 	return (
 		<>
 			<motion.div
@@ -415,10 +415,10 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 						>
 							{filteredPhoneNumbers.map((phone, index) => (
 								<PhoneNumberCard
-									key={phone.id}
+									key={`${index}-${statusFilter}-${searchTerm}`}
 									index={`${index}-${statusFilter}-${searchTerm}`}
 									viewMode={viewMode}
-									rounded-lg w-full phoneNumber={phone}
+									phoneNumber={phone}
 									onEdit={() => handleEdit(phone)}
 									onDelete={() => handleDelete(phone.id)}
 									isSelected={false}
