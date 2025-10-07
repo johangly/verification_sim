@@ -1,41 +1,13 @@
-import React, {useState, useEffect, useMemo} from "react";
+import React from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import {
-    RefreshCw,
-    TrendingUp,
     X,
     Check,
     CheckCheck,
     CircleX,
     MailCheck
 } from "lucide-react";
-import {CampaignType} from "../types/campaigns";
-import {
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-    type ChartConfig,
-} from "../components/ui/chart";
-import {
-    Pie,
-    PieChart,
-} from "recharts";
-import type {TypeStatistics} from "../types/stadistics";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "../components/ui/card.tsx";
-import {
-    Tooltip as UiToolTip,
-    TooltipContent,
-    TooltipTrigger,
-} from "../components/ui/tooltip";
-import {statisticsService} from "../services/stadistics";
-import {campaignsService} from "../services/campaignsService";
+
 import {
     Select,
     SelectContent,
@@ -44,8 +16,9 @@ import {
     SelectValue,
 } from "../components/ui/select";
 import {twMerge} from "tailwind-merge";
-import useCampaigns from "../hooks/useCampaigns";
 import StadisticsPieComponent from "../components/StadisticsPieComponent.tsx";
+import useStadistics from "../hooks/useStadistics.tsx";
+import {DetailsStates} from "../components/DetailsStates.tsx";
 
 const messagesStatus = {
     sent: {
@@ -69,374 +42,25 @@ const messagesStatus = {
         Icon: <X className="w-4 h-4"/>,
     },
 };
-const dataOfLineChart = [
-    {
-        name: "Junio  ",
-        v: 4000,
-        nv: 2400,
-        amt: 2400,
-    },
-    {
-        name: "Julio",
-        v: 3000,
-        nv: 1398,
-        amt: 2210,
-    },
-    {
-        name: "Agosto",
-        v: 2000,
-        nv: 9800,
-        amt: 2290,
-    },
-];
 const COLORS = ["#0088FE", "#ce1212", "#FFBB28", "#FF8042"];
 
 export const StadisticsPage: React.FC = () => {
-    const {allCampaigns} = useCampaigns();
-    const [isLoading, setIsLoading] = useState(true);
-    const [generalStatistics, setGeneralStatistics] = useState<
-        TypeStatistics | undefined
-    >(undefined);
-    const [campaigns, setCampaigns] = useState<CampaignType[] | []>(
-        []
-    );
-    const [selectedCampaign, setSelectedCampaign] =
-        useState<CampaignType | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [region, setRegion] = useState("");
-    const [ciudad, setCiudad] = useState("");
-    const [estado, setEstado] = useState("");
-    const [vendedor, setVendedor] = useState("");
-    const [modalidad, setModalidad] = useState("");
-    const [
+    const {
+        selectedCampaign,
+        selectFields,
+        generalStatistics,
+        isLoading, totalDeClientes,
+        setSelectedCampaign,
+        campaigns,
+        dataToShowInGraphStatus,
+        dataToShowInGraphMessage,
+        setIsModalOpen,
+        isModalOpen,
         campaignSelectedToSeeStatistics,
         setCampaignSelectedToSeeStatistics,
-    ] = useState(0);
-    const [dataToShowInGraphStatus, setDataToShowInGraphStatus] =
-        useState<{ name: string; value: number; color: string }[]>([]);
-    const [dataToShowInGraphMessage, setDataToShowInGraphMessage] =
-        useState<{ name: string; value: number, color: string }[]>([]);
-    useEffect(() => {
-        setCampaignSelectedToSeeStatistics(
-            allCampaigns.length > 0
-                ? allCampaigns[allCampaigns.length - 1].id
-                : 0
-        );
-    }, [allCampaigns]);
-    useEffect(() => {
-        const dataGraphByCampaignStatus = [
-            {
-                name: "verificado",
-                value: allCampaigns
-                    .filter(
-                        (c) =>
-                            c.id ===
-                            Number(campaignSelectedToSeeStatistics)
-                    )
-                    .reduce(
-                        (acc, c) =>
-                            acc +
-                            c.messages.filter(
-                                (m) =>
-                                    m.phoneNumber.status ===
-                                    "verificado"
-                            ).length,
-                        0
-                    ),
-                color: "var(--estado-verificado)"
-            },
-            {
-                name: "no verificado",
-                value: allCampaigns
-                    .filter(
-                        (c) =>
-                            c.id ===
-                            Number(campaignSelectedToSeeStatistics)
-                    )
-                    .reduce(
-                        (acc, c) =>
-                            acc +
-                            c.messages.filter(
-                                (m) =>
-                                    m.phoneNumber.status !==
-                                    "verificado"
-                            ).length,
-                        0
-                    ),
-                color: "var(--estado-noVerificado)"
-            },
-        ];
-
-        const dataGraphByCampaignMessage = [
-            {
-                name: "Si",
-                value: allCampaigns
-                    .filter(
-                        (c) =>
-                            c.id ===
-                            Number(campaignSelectedToSeeStatistics)
-                    )
-                    .reduce(
-                        (acc, c) =>
-                            acc +
-                            c.messages.filter(
-                                (m) => m.responseReceived === "Si"
-                            ).length,
-                        0
-                    ),
-                color: "var(--estado-verificado)"
-            },
-            {
-                name: "No",
-                value: allCampaigns
-                    .filter(
-                        (c) =>
-                            c.id ===
-                            Number(campaignSelectedToSeeStatistics)
-                    )
-                    .reduce(
-                        (acc, c) =>
-                            acc +
-                            c.messages.filter(
-                                (m) => m.responseReceived !== "Si"
-                            ).length,
-                        0
-                    ),
-                color: "var(--estado-noVerificado)"
-
-            },
-        ];
-
-        setDataToShowInGraphMessage(dataGraphByCampaignMessage);
-        setDataToShowInGraphStatus(dataGraphByCampaignStatus);
-    }, [campaignSelectedToSeeStatistics, allCampaigns]);
-
-    const renderLabel = (entry: { name: string; value: number }) => {
-        const total = dataToShowInGraphStatus.reduce(
-            (acc, item) => acc + item.value,
-            0
-        );
-        const percentage = ((entry.value / total) * 100).toFixed(2); // Calcula el porcentaje
-        return `${percentage}%`; // Muestra el porcentaje
-    };
-
-    const totalDeClientes = useMemo(() => {
-        if (!generalStatistics) return 0;
-        return (
-            generalStatistics.verificado +
-            generalStatistics["no verificado"] +
-            generalStatistics["por verificar"]
-        );
-    }, [generalStatistics]);
-
-    const chartData = useMemo(
-        () => [
-            {
-                estado: "verificado",
-                cantidad: generalStatistics
-                    ? generalStatistics.verificado
-                    : 0,
-                fill: "var(--estado-verificado)",
-            },
-            {
-                estado: "noVerificado",
-                cantidad: generalStatistics
-                    ? generalStatistics["no verificado"]
-                    : 0,
-                fill: "var(--estado-noVerificado)",
-            },
-            {
-                estado: "porVerificar",
-                cantidad: generalStatistics
-                    ? generalStatistics["por verificar"]
-                    : 0,
-                fill: "var(--estado-porVerificar)",
-            },
-        ],
-        [generalStatistics]
-    );
-
-    const chartConfig = {
-        cantidad: {
-            label: "Visitors",
-        },
-        verificado: {
-            label: "Verificado",
-            color: "var(--estado-verificado)",
-        },
-        noVerificado: {
-            label: "No Verificado",
-            color: "var(--estado-noVerificado)",
-        },
-        porVerificar: {
-            label: "Por Verificar",
-            color: "var(--estado-porVerificar)",
-        },
-    } satisfies ChartConfig;
-
-    const StatisticsCard = useMemo(
-        () => (
-            <Card
-                className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
-                <CardHeader className="flex items-center justify-between pb-0">
-                    <div className="flex flex-col">
-                        <CardTitle>Estado de clientes</CardTitle>
-                        <CardDescription>
-                            Ultimos 30 dias
-                        </CardDescription>
-                    </div>
-                    <UiToolTip delayDuration={500}>
-                        <TooltipTrigger disabled={isLoading}>
-                            <motion.div
-                                whileHover={{scale: 1.05}}
-                                whileTap={{scale: 0.95}}
-                                onClick={() =>
-                                    fetchGeneralStatistics("refresh")
-                                }
-                                className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                            >
-                                <RefreshCw
-                                    className={`w-4 h-4 ${isLoading
-                                        ? "animate-spin"
-                                        : ""
-                                    }`}
-                                />
-                            </motion.div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" sideOffset={5}>
-                            <p className="max-w-xs">
-                                Vuelve a calcular los datos (ten en
-                                cuenta que esto representa un consumo
-                                considerable de los recursos del
-                                servidor según la cantidad de datos
-                                que se procesen, este cálculo se hace
-                                automáticamente cada 6 horas)
-                            </p>
-                        </TooltipContent>
-                    </UiToolTip>
-                </CardHeader>
-                <CardContent className="flex-1 pb-0">
-                    <ChartContainer
-                        config={chartConfig}
-                        className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
-                    >
-                        <PieChart>
-                            <ChartTooltip
-                                content={
-                                    <ChartTooltipContent hideLabel/>
-                                }
-                            />
-                            <Pie
-                                data={chartData}
-                                dataKey="cantidad"
-                                label
-                                nameKey="estado"
-                            />
-                        </PieChart>
-                    </ChartContainer>
-                </CardContent>
-                <CardFooter className="flex-col gap-2 text-sm">
-                    <div className="flex items-center gap-2 leading-none font-regular">
-                        {generalStatistics && (
-                            <p className="text-center">
-                                en los ultimos 30 dias de
-                                <span className="font-bold ml-1">
-									{totalDeClientes}
-								</span>{" "}
-                                clientes, el
-                                <span className="font-bold ml-1">
-									{calcularPorcentajeVerificados(
-                                        generalStatistics
-                                    )}
-								</span>{" "}
-                                estan verificados
-                            </p>
-                        )}{" "}
-                        <TrendingUp className="h-4 w-4"/>
-                    </div>
-                    <div className="text-muted-foreground leading-none">
-                        Total de clientes los ultimos 30 dias
-                    </div>
-                </CardFooter>
-            </Card>
-        ),
-        [generalStatistics, chartData, isLoading, totalDeClientes]
-    );
-
-    function calcularPorcentajeVerificados(
-        stats: TypeStatistics
-    ): string {
-        const totalNumeros =
-            stats.verificado +
-            stats["no verificado"] +
-            stats["por verificar"];
-
-        if (totalNumeros === 0) {
-            return "0.00%"; // Evita la división por cero
-        }
-
-        const porcentaje = (stats.verificado / totalNumeros) * 100;
-
-        return `${porcentaje.toFixed(2)}%`; // Formatea a dos decimales
-    }
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [stats, campaignsData] = await Promise.all([
-                    fetchGeneralStatistics(),
-                    fetchCampaigns(),
-                ]);
-                setCampaigns(campaignsData);
-                setGeneralStatistics(stats);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    async function fetchCampaigns() {
-        setIsLoading(true);
-        return campaignsService
-            .getCampaigns()
-            .then((data) => {
-                console.log("obteniendo campañas:");
-                console.log(data);
-                setIsLoading(false);
-                return data; // Asegúrate de retornar los datos
-            })
-            .catch((error) => {
-                console.error("Error fetching campaigns:", error);
-                setIsLoading(false);
-                throw error; // Propaga el error para que se maneje en el catch del Promise.all
-            });
-    }
-
-    async function fetchGeneralStatistics(
-        type: "cached" | "refresh" = "cached"
-    ) {
-        setIsLoading(true);
-        return statisticsService
-            .getGeneralStatistics(type)
-            .then((data: TypeStatistics) => {
-                console.log("obteniendo estadisticas:");
-                setGeneralStatistics(data);
-                return data; // Asegúrate de devolver los datos
-            })
-            .catch((error) => {
-                console.error(
-                    "Error fetching general statistics:",
-                    error
-                );
-                throw error; // Propaga el error para que se maneje en el catch del Promise.all
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }
-
+        StatisticsCard,
+        allCampaigns
+    } = useStadistics()
     return (
         <div className="w-full flex justify-center items-start gap-5">
             <div className="max-w-7xl w-full space-y-6">
@@ -502,231 +126,39 @@ export const StadisticsPage: React.FC = () => {
                         </div>
                         <div
                             className="w-full grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 my-6 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                            <motion.div
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.2, delay: 0.1}}
-                                className="flex flex-col justify-center items-start space-y-2 w-full"
-                            >
-                                <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-                                    MODALIDAD
-                                </label>
-                                <Select
-                                    value={modalidad}
-                                    onValueChange={setModalidad}
+                            {selectFields.map((field, idx) => (
+                                <motion.div
+                                    key={field.label}
+                                    initial={{opacity: 0, y: 20}}
+                                    animate={{opacity: 1, y: 0}}
+                                    exit={{opacity: 0, y: -20}}
+                                    transition={{duration: 0.2, delay: 0.1 * (idx + 1)}}
+                                    className="flex flex-col justify-center items-start space-y-2 w-full"
                                 >
-                                    <SelectTrigger
-                                        style={{
-                                            padding: ".5rem 1rem",
-                                            minHeight: "42px",
-                                        }}
-                                        className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <SelectValue placeholder="Selecciona una región"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700">
-                                        <SelectItem
-                                            className={twMerge(
-                                                region === "region1" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="region1"
+                                    <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
+                                        {field.label}
+                                    </label>
+                                    <Select value={field.value} onValueChange={field.setValue}>
+                                        <SelectTrigger
+                                            style={{padding: ".5rem 1rem", minHeight: "42px"}}
+                                            className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
-                                            Región 1
-                                        </SelectItem>
-                                        <SelectItem
-                                            className={twMerge(
-                                                region === "region2" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="region2"
-                                        >
-                                            Región 2
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </motion.div>
-                            <motion.div
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.2, delay: 0.1}}
-                                className="flex flex-col justify-center items-start space-y-2 w-full"
-                            >
-                                <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-                                    REGIÓN
-                                </label>
-                                <Select
-                                    value={region}
-                                    onValueChange={setRegion}
-                                >
-                                    <SelectTrigger
-                                        style={{
-                                            padding: ".5rem 1rem",
-                                            minHeight: "42px",
-                                        }}
-                                        className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <SelectValue placeholder="Selecciona una región"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700">
-                                        <SelectItem
-                                            className={twMerge(
-                                                region === "region1" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="region1"
-                                        >
-                                            Región 1
-                                        </SelectItem>
-                                        <SelectItem
-                                            className={twMerge(
-                                                region === "region2" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="region2"
-                                        >
-                                            Región 2
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </motion.div>
-                            <motion.div
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.2, delay: 0.3}}
-                                className="flex flex-col justify-center items-start space-y-2 w-full"
-                            >
-                                <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-                                    CIUDAD
-                                </label>
-                                <Select
-                                    value={ciudad}
-                                    onValueChange={setCiudad}
-                                >
-                                    <SelectTrigger
-                                        style={{
-                                            padding: ".5rem 1rem",
-                                            minHeight: "42px",
-                                        }}
-                                        className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <SelectValue placeholder="Selecciona una ciudad"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700">
-                                        <SelectItem
-                                            className={twMerge(
-                                                ciudad === "city1" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="city1"
-                                        >
-                                            Ciudad 1
-                                        </SelectItem>
-                                        <SelectItem
-                                            className={twMerge(
-                                                ciudad === "city2" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="city2"
-                                        >
-                                            Ciudad 2
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </motion.div>
-                            <motion.div
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.2, delay: 0.5}}
-                                className="flex flex-col justify-center items-start space-y-2 w-full"
-                            >
-                                <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-                                    VENDEDOR
-                                </label>
-                                <Select
-                                    value={vendedor}
-                                    onValueChange={setVendedor}
-                                >
-                                    <SelectTrigger
-                                        style={{
-                                            padding: ".5rem 1rem",
-                                            minHeight: "42px",
-                                        }}
-                                        className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <SelectValue placeholder="Selecciona un vendedor"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700">
-                                        <SelectItem
-                                            className={twMerge(
-                                                vendedor === "seller1" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="seller1"
-                                        >
-                                            Vendedor 1
-                                        </SelectItem>
-                                        <SelectItem
-                                            className={twMerge(
-                                                vendedor === "seller2" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="seller2"
-                                        >
-                                            Vendedor 2
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </motion.div>
-                            <motion.div
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.2, delay: 0.5}}
-                                className="flex flex-col justify-center items-start space-y-2 w-full"
-                            >
-                                <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-                                    ESTADO
-                                </label>
-                                <Select
-                                    value={estado}
-                                    onValueChange={setEstado}
-                                >
-                                    <SelectTrigger
-                                        style={{
-                                            padding: ".5rem 1rem",
-                                            minHeight: "42px",
-                                        }}
-                                        className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <SelectValue placeholder="Selecciona un vendedor"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700">
-                                        <SelectItem
-                                            className={twMerge(
-                                                vendedor === "seller1" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="seller1"
-                                        >
-                                            Vendedor 1
-                                        </SelectItem>
-                                        <SelectItem
-                                            className={twMerge(
-                                                vendedor === "seller2" &&
-                                                "bg-blue-600 text-white"
-                                            )}
-                                            value="seller2"
-                                        >
-                                            Vendedor 2
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </motion.div>
+                                            <SelectValue placeholder={field.placeholder}/>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-gray-700">
+                                            {field.options.map((option) => (
+                                                <SelectItem
+                                                    key={option.value}
+                                                    className={twMerge(field.value === option.value && "bg-blue-600 text-white")}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </motion.div>
+                            ))}
                         </div>
                     </motion.div>
                     <div
@@ -736,7 +168,7 @@ export const StadisticsPage: React.FC = () => {
                                 <div className="w-[48%]">
                                     <StadisticsPieComponent
                                         title={
-                                        `Estadisticas de la campaña #${campaignSelectedToSeeStatistics}`
+                                            `Estadisticas de la campaña #${campaignSelectedToSeeStatistics}`
                                         }
                                         subtitle={'Estados de los Teléfonos'}
                                         data={dataToShowInGraphStatus}
@@ -753,88 +185,7 @@ export const StadisticsPage: React.FC = () => {
                                         'Detalle de respuestas a los mensajes'
                                     }/>
                                 </div>
-                                <div
-                                    className=" flex flex-col bg-white dark:bg-gray-800 rounded-xl flex-1 min-w-[400px] p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                                    {dataToShowInGraphStatus.length >
-                                    0 ? (
-                                        <>
-                                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                                                Detalle de Estados
-                                            </h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                                {dataToShowInGraphStatus.map(
-                                                    (data, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex flex-col items-center p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
-                                                        >
-                                                            <div
-                                                                className="w-12 h-12 flex items-center justify-center rounded-full mb-2"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        COLORS[
-                                                                        index %
-                                                                        COLORS.length
-                                                                            ],
-                                                                }}
-                                                            >
-																<span className="text-white font-bold text-lg">
-																	{
-                                                                        data.value
-                                                                    }
-																</span>
-                                                            </div>
-                                                            <span className="text-gray-900 dark:text-white font-medium">
-																{
-                                                                    data.name
-                                                                }
-															</span>
-                                                        </div>
-                                                    )
-                                                )}
-                                                <div
-                                                    key={3}
-                                                    className="flex flex-col items-center p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
-                                                >
-                                                    <div
-                                                        className="w-12 h-12 flex items-center justify-center rounded-full mb-2"
-                                                        style={{
-                                                            backgroundColor:
-                                                                COLORS[
-                                                                3 %
-                                                                COLORS.length
-                                                                    ],
-                                                        }}
-                                                    >
-														<span className="text-white font-bold text-lg">
-															+{20}
-														</span>
-                                                    </div>
-                                                    <span className="text-gray-900 dark:text-white font-medium">
-														Mes anterior
-													</span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                className="rounded-lg p-6 bg-green-500/10 text-green-700 border border-green-200 dark:border-green-700">
-                                                <p>
-                                                    Total de números:{" "}
-                                                    {dataToShowInGraphStatus.reduce(
-                                                        (acc, curr) =>
-                                                            acc +
-                                                            curr.value,
-                                                        0
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <p className="text-gray-600 dark:text-gray-400">
-                                            No hay datos disponibles para
-                                            mostrar.
-                                        </p>
-                                    )}
-                                </div>
+                                <DetailsStates dataToShowInGraphStatus={dataToShowInGraphStatus} COLORS={COLORS}/>
                             </div>
                         ) : (
                             <p className="text-gray-600 dark:text-gray-400">
