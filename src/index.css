@@ -158,7 +158,9 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
-
+.recharts-surface{
+    max-width: 600px;
+}
 @layer base {
   
   :root {
