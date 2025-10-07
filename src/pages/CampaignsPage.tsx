@@ -283,7 +283,7 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 
 		setFilteredPhoneNumbers(filtered);
 	}, [phoneNumbers, searchTerm, statusFilter]);
-	console.log('phoneNumbers',phoneNumbers)
+	console.log('phoneNumbers', phoneNumbers)
 	return (
 		<>
 			<motion.div
@@ -534,12 +534,14 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 				</motion.button>
 			</div>
 			<div className="rounded-lg  w-full">
-				{campaigns.map((campaign) => (
-					<CampaignCard
-						key={campaign.id}
-						campaign={campaign}
-					/>
-				))}
+				{campaigns
+					.slice() // Crea una copia del array
+					.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((campaign) => (
+						<CampaignCard
+							key={campaign.id}
+							campaign={campaign}
+						/>
+					))}
 			</div>
 		</motion.div>
 	);
