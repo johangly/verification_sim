@@ -533,6 +533,8 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 		}
 	}
 
+
+
 	useEffect(() => {
 		const newSocket = io(VITE_SOCKET_API_URL);
 
