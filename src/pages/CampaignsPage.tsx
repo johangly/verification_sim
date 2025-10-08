@@ -584,7 +584,7 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 				>
 					Nueva Campaña
 				</motion.button>
-				<motion.button
+				{/* <motion.button
 					initial={{ opacity: 0, x: 20 }}
 					animate={{ opacity: 1, x: 0 }}
 					whileHover={{ scale: 1.02 }}
@@ -597,7 +597,7 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 					disabled={!isConnected}
 				>
 					{isConnected ? 'Enviar Mensajes' : 'Conectando...'}
-				</motion.button>
+				</motion.button> */}
 			</div>
 			<div className="rounded-lg  w-full">
 				{campaigns && campaigns.length > 0 ?
