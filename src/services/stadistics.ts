@@ -22,6 +22,9 @@ class StatisticsService {
     async getGeneralStatistics(type: 'cached' | 'refresh' = 'cached'): Promise<TypeStatistics> {
         return this.request<TypeStatistics>(`/estadisticas?type=${type}`);
     }
+    async getStatisticsByRangeDays(){
+        return this.request('/estadisticas/phonesbydaysrange/120');
+    }
 }
 
 export const statisticsService = new StatisticsService();

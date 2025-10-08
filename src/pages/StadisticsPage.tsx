@@ -19,6 +19,7 @@ import {twMerge} from "tailwind-merge";
 import StadisticsPieComponent from "../components/StadisticsPieComponent.tsx";
 import useStadistics from "../hooks/useStadistics.tsx";
 import {DetailsStates} from "../components/DetailsStates.tsx";
+import StadisticsAreaChartComponent from "../components/StadisticsAreaChartComponent.tsx";
 
 const messagesStatus = {
     sent: {
@@ -59,8 +60,10 @@ export const StadisticsPage: React.FC = () => {
         campaignSelectedToSeeStatistics,
         setCampaignSelectedToSeeStatistics,
         StatisticsCard,
-        allCampaigns
+        allCampaigns,
+        dataToShowInGraphAreaMemo
     } = useStadistics()
+
     return (
         <div className="w-full flex justify-center items-start gap-5">
             <div className="max-w-7xl w-full space-y-6">
@@ -245,6 +248,13 @@ export const StadisticsPage: React.FC = () => {
                         )
                     )}
                 </AnimatePresence>
+                    <StadisticsAreaChartComponent
+                        title={'Grafico de area'}
+                        description={'Datos sobre telefonos verificados y no verificados en rango de tiempo'}
+                        labelPassed={'verificado'}
+                        data={dataToShowInGraphAreaMemo}
+                        colors={{verificado: "#22c55e", noVerificado: "#ef4444"}}
+                    />
 
                 {/* Header */}
                 {campaigns && (

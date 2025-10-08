@@ -32,6 +32,8 @@ import {
     RefreshCw,
     TrendingUp
 } from "lucide-react";
+import {PhoneNumber} from "../types/phoneNumber.ts";
+
 export default function useStadistics() {
     const {allCampaigns} = useCampaigns();
     const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +55,7 @@ export default function useStadistics() {
         campaignSelectedToSeeStatistics,
         setCampaignSelectedToSeeStatistics,
     ] = useState(0);
+    const [dataToShowInGraphAreaOfFetch, setDataToShowInGraphAreaOfFetch] = useState<PhoneNumber[]>([])
     const [dataToShowInGraphStatus, setDataToShowInGraphStatus] =
         useState<{ name: string; value: number; color: string }[]>([]);
     const [dataToShowInGraphMessage, setDataToShowInGraphMessage] =
@@ -71,8 +74,8 @@ export default function useStadistics() {
             setValue: setModalidad,
             placeholder: "Selecciona una modalidad",
             options: [
-                { value: "region1", label: "Región 1" },
-                { value: "region2", label: "Región 2" },
+                {value: "region1", label: "Región 1"},
+                {value: "region2", label: "Región 2"},
             ],
         },
         {
@@ -81,8 +84,8 @@ export default function useStadistics() {
             setValue: setRegion,
             placeholder: "Selecciona una región",
             options: [
-                { value: "region1", label: "Región 1" },
-                { value: "region2", label: "Región 2" },
+                {value: "region1", label: "Región 1"},
+                {value: "region2", label: "Región 2"},
             ],
         },
         {
@@ -91,8 +94,8 @@ export default function useStadistics() {
             setValue: setCiudad,
             placeholder: "Selecciona una ciudad",
             options: [
-                { value: "city1", label: "Ciudad 1" },
-                { value: "city2", label: "Ciudad 2" },
+                {value: "city1", label: "Ciudad 1"},
+                {value: "city2", label: "Ciudad 2"},
             ],
         },
         {
@@ -101,8 +104,8 @@ export default function useStadistics() {
             setValue: setVendedor,
             placeholder: "Selecciona un vendedor",
             options: [
-                { value: "seller1", label: "Vendedor 1" },
-                { value: "seller2", label: "Vendedor 2" },
+                {value: "seller1", label: "Vendedor 1"},
+                {value: "seller2", label: "Vendedor 2"},
             ],
         },
         {
@@ -111,11 +114,30 @@ export default function useStadistics() {
             setValue: setEstado,
             placeholder: "Selecciona un estado",
             options: [
-                { value: "seller1", label: "Vendedor 1" },
-                { value: "seller2", label: "Vendedor 2" },
+                {value: "seller1", label: "Vendedor 1"},
+                {value: "seller2", label: "Vendedor 2"},
             ],
         },
-    ];
+    ]
+    const dataToShowInGraphAreaMemo = useMemo(() => {
+        const grouped = dataToShowInGraphAreaOfFetch.reduce((acc, item) => {
+                const date = item.createdAt;
+                if (!acc[date]) acc[date] = [];
+                acc[date].push(item);
+                return acc;
+            }, {} as Record<string, PhoneNumber[]>);
+
+            return Object.entries(grouped).map(([date, items]) => {
+                const verificado = items.filter(i => i.status === "verificado").length;
+                const noVerificado = items.filter(i => i.status !== "verificado").length;
+                return {
+                    date,
+                    verificado,
+                    noVerificado
+                };
+            });
+    }, [dataToShowInGraphAreaOfFetch]);
+
     useEffect(() => {
         const dataGraphByCampaignStatus = [
             {
@@ -347,6 +369,16 @@ export default function useStadistics() {
         [generalStatistics, chartData, isLoading, totalDeClientes]
     );
 
+    async function fetchDataByRangeDays() {
+        setIsLoading(true);
+        return await statisticsService.getStatisticsByRangeDays().then((data) => {
+            setDataToShowInGraphAreaOfFetch(data as []);
+            return data;
+        }).finally(() => {
+            setIsLoading(false);
+        });
+    }
+
     function calcularPorcentajeVerificados(
         stats: TypeStatistics
     ): string {
@@ -364,6 +396,9 @@ export default function useStadistics() {
         return `${porcentaje.toFixed(2)}%`; // Formatea a dos decimales
     }
 
+    useEffect(() => {
+        fetchDataByRangeDays();
+    }, []);
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -386,8 +421,6 @@ export default function useStadistics() {
         return campaignsService
             .getCampaigns()
             .then((data) => {
-                console.log("obteniendo campañas:");
-                console.log(data);
                 setIsLoading(false);
                 return data; // Asegúrate de retornar los datos
             })
@@ -405,7 +438,6 @@ export default function useStadistics() {
         return statisticsService
             .getGeneralStatistics(type)
             .then((data: TypeStatistics) => {
-                console.log("obteniendo estadisticas:");
                 setGeneralStatistics(data);
                 return data; // Asegúrate de devolver los datos
             })
@@ -421,7 +453,7 @@ export default function useStadistics() {
             });
     }
 
-    return{
+    return {
         selectedCampaign,
         selectFields,
         setRegion,
@@ -440,6 +472,6 @@ export default function useStadistics() {
         setCampaignSelectedToSeeStatistics,
         generalStatistics,
         isLoading,
-        setGeneralStatistics, totalDeClientes, allCampaigns
+        setGeneralStatistics, totalDeClientes, allCampaigns, dataToShowInGraphAreaMemo
     }
 }
