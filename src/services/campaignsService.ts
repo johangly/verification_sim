@@ -56,6 +56,13 @@ export class CampaignsService {
     });
   }
 
+  async createFullCampaignWithSockets(data:{userId:number,phoneNumbers:Number[]}): Promise<any> {
+    return this.request<any>('/sockets', {
+      method: 'POST',
+	  body: JSON.stringify(data),
+    });
+  }
+
   async getCampaignById(id:number):Promise<CampaignType>{
     return this.request<CampaignType>(`/campaigns/${id}`, {
       method: 'GET',

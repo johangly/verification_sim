@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 interface CampaignCardProps {
 	campaign: CampaignType;
+	index: number;
 }
 
 export default function CampaignCard({
 	campaign,
+	index,
 }: CampaignCardProps) {
 	const navigate = useNavigate();
 
@@ -16,7 +18,7 @@ export default function CampaignCard({
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, y: -20 }}
-			transition={{ duration: 0.4,delay: Number(campaign.id) * 0.02, type: 'spring', stiffness: 100 }}
+			transition={{ duration: 0.4,delay: index * 0.02, type: 'spring', stiffness: 100 }}
 			key={campaign.id} 
 			className="flex shadow-sm justify-between p-4 w-full mb-2 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
 			onClick={() => navigate(`/campaigns/${campaign.id}`)}

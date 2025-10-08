@@ -9,7 +9,6 @@ import { AnimatePresence } from "framer-motion";
 import { ChevronLeft, LayoutGrid, List, Plus, Search, SquareCheckBig, Upload } from "lucide-react";
 import { PhoneNumberFileForm } from "../components/PhoneNumberFileForm";
 import { ConfirmDialog } from '../components/ConfirmDialog';
-
 import {
 	Tooltip,
 	TooltipContent,
@@ -21,6 +20,9 @@ import { campaignsService } from "../services/campaignsService";
 import { PhoneNumberCard } from "../components/PhoneNumberCard";
 import { PhoneNumberForm } from "../components/PhoneNumberForm";
 import { StartCampaignDialog } from "../components/StartCampaignDialog";
+import { io, Socket } from 'socket.io-client';
+
+const VITE_SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL;
 
 export default function CampaignsPage() {
 
@@ -503,12 +505,58 @@ function CampaignForm({ setCreateNewCampaign }: { setCreateNewCampaign: (value: 
 }
 
 function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: CampaignType[], setCreateNewCampaign: (value: boolean) => void }) {
+	const [socket, setSocket] = useState<Socket | null>(null);
+	const [isConnected, setIsConnected] = useState(false);
+	const [processingId, setProcessingId] = useState<string | null>(null);
+	const userId = 23;
+
+	const procesarDatos = async (data: any[]) => {
+		
+		try {
+			const response = campaignsService.createFullCampaignWithSockets({userId,phoneNumbers:data});
+			const result = await response;
+			setProcessingId(result.processingId);
+
+			const checkStatus = setInterval(async () => {
+				if (!socket) return;
+
+				socket.emit('verificar_estado', result.processingId, (estado: any) => {
+					console.log('Estado actual:', estado);
+					if (estado.status === 'completed' || estado.status === 'error') {
+						clearInterval(checkStatus);
+						// Manejar finalización o error
+					}
+				});
+			}, 1000);
+		} catch (error) {
+			console.error('Error al iniciar el procesamiento:', error);
+		}
+	}
+
+	useEffect(() => {
+		const newSocket = io(VITE_SOCKET_API_URL);
+
+		newSocket.on('connect', () => {
+			console.log('Conectado con ID:', newSocket.id);
+			setIsConnected(true);
+			// Unirse a la sala privada
+			newSocket.emit('unir_sala', userId);
+		});
+
+		// Escuchar actualizaciones de progreso
+		newSocket.on('progreso', (data) => {
+			console.log(`Progreso: ${data.progress}%`);
+			// Actualizar UI con el progreso
+		});
+
+		setSocket(newSocket);
+		return () => {
+			newSocket.disconnect(); // ✅ Solo ejecuta, no retornes
+		};
+	}, []);
+
 	return (
 		<motion.div
-			initial={{ opacity: 0, x: 80 }}
-			animate={{ opacity: 1, x: 0 }}
-			exit={{ opacity: 0, x: -80 }}
-			transition={{ duration: 0.5 }}
 			className="max-w-4xl w-full space-y-6"
 		>
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -525,23 +573,68 @@ function CampaignList({ campaigns, setCreateNewCampaign }: { campaigns: Campaign
 					</p>
 				</motion.div>
 				<motion.button
-					whileHover={{ scale: 1.05 }}
-					whileTap={{ scale: 0.95 }}
+					initial={{ opacity: 0, x: 20 }}
+					animate={{ opacity: 1, x: 0 }}
+					whileHover={{ scale: 1.02 }}
+					whileTap={{ scale: 0.98 }}
 					className="px-4 py-2 bg-blue-600 shadow-md text-white rounded-lg hover:bg-blue-700 transition-colors"
 					onClick={() => setCreateNewCampaign(true)}
 				>
 					Nueva Campaña
 				</motion.button>
+				<motion.button
+					initial={{ opacity: 0, x: 20 }}
+					animate={{ opacity: 1, x: 0 }}
+					whileHover={{ scale: 1.02 }}
+					whileTap={{ scale: 0.98 }}
+					className={`px-4 py-2 shadow-md rounded-lg transition-colors ${isConnected
+						? 'bg-green-600 hover:bg-green-700 text-white'
+						: 'bg-gray-400 cursor-not-allowed'
+						}`}
+					onClick={() => procesarDatos([1,2,3,4,5,6,7,8,89,98,43,4,6,5,2])}
+					disabled={!isConnected}
+				>
+					{isConnected ? 'Enviar Mensajes' : 'Conectando...'}
+				</motion.button>
 			</div>
 			<div className="rounded-lg  w-full">
-				{campaigns
-					.slice() // Crea una copia del array
-					.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((campaign) => (
-						<CampaignCard
-							key={campaign.id}
-							campaign={campaign}
-						/>
-					))}
+				{campaigns && campaigns.length > 0 ?
+					campaigns
+						.slice() // Crea una copia del array
+						.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((campaign, index) => (
+							<CampaignCard
+								index={index}
+								key={`${index}-${campaign.id}`}
+								campaign={campaign}
+							/>
+						)) : (
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							className="text-center py-12"
+						>
+							<div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+								<Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+							</div>
+							<h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+								No se encontraron campañas
+							</h3>
+							<p className="text-gray-600 dark:text-gray-400 mb-4">
+								Comienza creando tu primera campaña
+							</p>
+							<motion.button
+								initial={{ opacity: 0, x: 20 }}
+								animate={{ opacity: 1, x: 0 }}
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+								className="px-4 py-2 bg-blue-600 shadow-md text-white rounded-lg hover:bg-blue-700 transition-colors"
+								onClick={() => setCreateNewCampaign(true)}
+							>
+								Nueva Campaña
+							</motion.button>
+						</motion.div>
+					)}
 			</div>
 		</motion.div>
 	);
