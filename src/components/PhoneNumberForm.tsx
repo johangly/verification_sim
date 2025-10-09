@@ -4,6 +4,14 @@ import { X, Save, Plus } from 'lucide-react';
 import { phoneNumberSchema, updatePhoneNumberSchema } from '../schemas/phoneNumber';
 import { PhoneNumber, PhoneNumberStatus } from '../types/phoneNumber';
 import { toast } from 'react-hot-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select"
+import { twMerge } from 'tailwind-merge';
 
 interface PhoneNumberFormProps {
   isOpen: boolean;
@@ -20,13 +28,13 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
   phoneNumber,
   isLoading = false,
 }) => {
-  
+
   const [formData, setFormData] = useState<{
     phoneNumber: string;
     status: PhoneNumberStatus;
   }>({
     phoneNumber: '',
-    status: 'por verificar',
+    status: 'no verificado',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -39,7 +47,7 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
     } else {
       setFormData({
         phoneNumber: '',
-        status: 'por verificar',
+        status: 'no verificado',
       });
     }
     setErrors({});
@@ -60,7 +68,7 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
         return;
       }
       const response = await onSubmit(validation.data);
-      if(response){
+      if (response) {
         onClose();
       }
     } catch (error) {
@@ -118,11 +126,10 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
                   type="text"
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.phoneNumber 
-                      ? 'border-red-500 dark:border-red-400' 
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${errors.phoneNumber
+                      ? 'border-red-500 dark:border-red-400'
                       : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                    }`}
                   placeholder="Ej: +57 3123456789"
                 />
                 {errors.phoneNumber && (
@@ -137,7 +144,7 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
               </div>
 
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {/* <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estado
                 </label>
                 <select
@@ -150,7 +157,20 @@ export const PhoneNumberForm: React.FC<PhoneNumberFormProps> = ({
                   <option value="por verificar">Por Verificar</option>
                   <option value="verificado">Verificado</option>
                   <option value="no verificado">No Verificado</option>
-                </select>
+                </select> */}
+                <div className='flex flex-col justify-center items-start space-y-2'>
+                  <label htmlFor="status" className="text-sm font-medium text-gray-900 dark:text-white opacity-70">Estado</label>
+                  <Select  value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as PhoneNumberStatus }))}>
+                    <SelectTrigger id="status" name="status" style={{ padding: '.5rem 1rem', height: '42px' }} className="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className='bg-white dark:bg-gray-700'>
+                      <SelectItem className={twMerge(formData.status === 'verificado' && 'bg-blue-600 text-white')} value="verificado">Verificado</SelectItem>
+                      <SelectItem className={twMerge(formData.status === 'por verificar' && 'bg-blue-600 text-white')} value="por verificar">Por Verificar</SelectItem>
+                      <SelectItem className={twMerge(formData.status === 'no verificado' && 'bg-blue-600 text-white')} value="no verificado">No Verificado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">

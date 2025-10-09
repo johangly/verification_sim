@@ -74,7 +74,7 @@ const messagesStatus = {
 	failed: {
 		label: "Fallido",
 		Icon: <X className="w-4 h-4" />,
-	},
+	}
 };
 const dataOfLineChart = [
 	{
@@ -98,6 +98,66 @@ const dataOfLineChart = [
 ];
 const COLORS = ["#0088FE", "#ce1212", "#FFBB28", "#FF8042"];
 
+const statusColors = {
+	read: 'text-blue-500',
+	delivered: 'text-green-500',
+	undelivered: 'text-yellow-500',
+	failed: 'text-red-500',
+	other: 'text-purple-500'
+};
+
+const statusIcons = {
+	read: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+		</svg>
+	),
+	delivered: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+		</svg>
+	),
+	undelivered: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+	),
+	failed: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+		</svg>
+	),
+	other: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+	),
+	total: (
+		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+	)
+};
+
+interface MessageStadistics {
+	name: string;
+	label: string;
+	value: number;
+	percentage: number;
+	icon: React.ReactNode;
+	color: string;
+	tooltip?: string;
+	isTotal?: boolean;
+}
+
+interface CampaignMessagesStadistics {
+	messageStats: MessageStadistics[],
+	totalMessages: number
+}
+
+
+
 export const StadisticsPage: React.FC = () => {
 	const { allCampaigns } = useCampaigns();
 	const [isLoading, setIsLoading] = useState(true);
@@ -115,6 +175,10 @@ export const StadisticsPage: React.FC = () => {
 	const [estado, setEstado] = useState("");
 	const [vendedor, setVendedor] = useState("");
 	const [modalidad, setModalidad] = useState("");
+	const [campaignMessagesStadistics, setCampaignMessagesStadistics] = useState<CampaignMessagesStadistics>({
+		messageStats: [],
+		totalMessages: 0
+	});
 	const [
 		campaignSelectedToSeeStatistics,
 		setCampaignSelectedToSeeStatistics,
@@ -208,12 +272,93 @@ export const StadisticsPage: React.FC = () => {
 					),
 			},
 		];
+		const [selectedCampaign] = allCampaigns.filter(
+			(c) =>
+				c.id === Number(campaignSelectedToSeeStatistics)
+		);
+
+		if (selectedCampaign) {
+			const defaultStatuses = ['read', 'delivered', 'undelivered', 'failed'];
+			const allStatuses = [...new Set(selectedCampaign.messages.map(m => m.messageStatus))];
+			const totalMessages = selectedCampaign.messages.length;
+
+			const messageStats: MessageStadistics[] = defaultStatuses.map(status => {
+				const count = selectedCampaign.messages.filter(
+					m => m.messageStatus === status
+				).length;
+
+				const percentage = totalMessages > 0 ? (count / totalMessages * 100).toFixed(1) : 0;
+
+				const labels: Record<string, string> = {
+					read: 'Mensajes Leídos',
+					delivered: 'Entregados',
+					undelivered: 'No Entregados',
+					failed: 'Fallidos'
+				};
+
+				return {
+					name: status,
+					label: labels[status] || status,
+					value: count,
+					percentage: Number(percentage),
+					icon: statusIcons[status as keyof typeof statusIcons] || statusIcons.other,
+					color: statusColors[status as keyof typeof statusColors] || statusColors.other,
+					tooltip: labels[status] || status
+				};
+			});
+
+			// Calcular "otros" estados
+			const otherStatuses = allStatuses.filter(
+				status => !defaultStatuses.includes(status)
+			);
+
+			if (otherStatuses.length > 0) {
+				const otherCount = otherStatuses.reduce((total, status) => {
+					return total + selectedCampaign.messages.filter(
+						m => m.messageStatus === status
+					).length;
+				}, 0);
+
+				const otherPercentage = totalMessages > 0 ? (otherCount / totalMessages * 100).toFixed(1) : 0;
+
+				messageStats.push({
+					name: 'other',
+					label: 'Otros',
+					value: otherCount,
+					percentage: Number(otherPercentage),
+					tooltip: `Estados: ${otherStatuses.join(', ')}`,
+					icon: statusIcons.other,
+					color: statusColors.other
+				});
+
+
+			}
+			// Agregar la tarjeta de total al final
+			messageStats.push({
+				name: 'total',
+				label: 'Total de Mensajes',
+				value: totalMessages,
+				percentage: 100,
+				color: 'text-blue-500',
+				icon: statusIcons.total,
+				tooltip: 'Total de Mensajes',
+				isTotal: true // Bandera para identificar la tarjeta de total
+			});
+
+			// Ordenar por cantidad (opcional)
+			messageStats.sort((a, b) => {
+				if (a.isTotal) return 1; // Mover total al final
+				if (b.isTotal) return -1;
+				return b.value - a.value;
+			});
+
+			setCampaignMessagesStadistics({ messageStats, totalMessages });
+		}
 
 		setDataToShowInGraphMessage(dataGraphByCampaignMessage);
 		setDataToShowInGraphStatus(dataGraphByCampaignStatus);
-		console.log("dataGraphByCampaign", dataGraphByCampaignStatus);
 	}, [campaignSelectedToSeeStatistics, allCampaigns]);
-	console.log(allCampaigns);
+
 	const renderLabel = (entry: { name: string; value: number }) => {
 		const total = dataToShowInGraphStatus.reduce(
 			(acc, item) => acc + item.value,
@@ -438,7 +583,7 @@ export const StadisticsPage: React.FC = () => {
 				setIsLoading(false);
 			});
 	}
-
+	
 	return (
 		<div className="w-full flex justify-center items-start gap-5">
 			<div className="max-w-7xl w-full space-y-6">
@@ -730,6 +875,80 @@ export const StadisticsPage: React.FC = () => {
 							</motion.div>
 						</div>
 					</motion.div>
+					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-8 mb-8 ">
+						<AnimatePresence>
+							{campaignMessagesStadistics
+								&& campaignMessagesStadistics.messageStats
+								&& campaignMessagesStadistics.messageStats.map((stat, index) => (
+										<motion.div
+											initial={{ opacity: 0, x: 80 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: -80 }}
+											transition={{ duration: 0.2, delay: index * 0.2, ease: 'easeIn', stiffness: 100 }}
+											className={twMerge(`
+												relative flex flex-col items-center p-4 rounded-lg border 
+												transition-all duration-200 hover:shadow-md`,
+												stat.isTotal ? 'justify-center border-blue-200 bg-blue-600/50 dark:bg-blue-900 dark:bg-opacity-10 dark:border-blue-800' : `${stat.color.replace('text', 'border')} bg-white dark:bg-gray-800`)}
+										>
+											{stat.isTotal ? (
+												// Contenido de la tarjeta de total
+												<>
+													<div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+														<svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+														</svg>
+													</div>
+													<span className="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">
+														{stat.value}
+													</span>
+													<span className="text-sm text-center text-blue-600 dark:text-blue-400">
+														{stat.label}
+													</span>
+												</>
+											) : (
+												// Contenido de las tarjetas normales
+												<>
+													<div className={`mb-2 p-2 rounded-full ${stat.color} bg-opacity-10`}>
+														{stat.icon}
+													</div>
+													<span className={`text-2xl font-bold text-center ${stat.color}`}>
+														{stat.value}
+													</span>
+													<span className="text-sm text-center text-gray-600 dark:text-gray-300 mb-1">
+														{stat.label}
+													</span>
+													<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
+														<div
+															className={`h-1.5 rounded-full ${stat.color.replace('text', 'bg')}`}
+															style={{ width: `${stat.percentage}%` }}
+														></div>
+													</div>
+													<span className="text-xs text-center text-gray-500 mt-1">
+														{stat.percentage}%
+													</span>
+												</>
+											)}
+
+											{/* Tooltip para "Otros" */}
+											{stat.tooltip && (
+												<div className="absolute top-2 right-2">
+													<div className="relative group">
+														<button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+															<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+															</svg>
+														</button>
+														<div className="absolute z-10 hidden group-hover:block w-48 p-2 mt-1 text-xs text-white bg-gray-800 rounded shadow-lg right-0">
+															{stat.tooltip}
+														</div>
+													</div>
+												</div>
+											)}
+										</motion.div>
+										
+								))}
+						</AnimatePresence>
+					</div>
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-x-6 space-y-6 mb-6">
 						{campaignSelectedToSeeStatistics !== 0 ? (
 							<div className="w-full flex items-start flex-wrap space-x-6 space-y-6">
