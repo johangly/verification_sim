@@ -1,49 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-	RefreshCw,
-	TrendingUp,
 	X,
 	Check,
 	CheckCheck,
 	CircleX,
 	MailCheck
 } from "lucide-react";
-import { CampaignType } from "../types/campaigns";
-import {
-	ChartContainer,
-	ChartTooltip,
-	ChartTooltipContent,
-	type ChartConfig,
-} from "../components/ui/chart";
-import {
-	CartesianGrid,
-	Cell,
-	Legend,
-	Line,
-	Pie,
-	PieChart,
-	LineChart,
-	XAxis,
-	Tooltip,
-	YAxis,
-} from "recharts";
-import type { TypeStatistics } from "../types/stadistics";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "../components/ui/card";
-import {
-	Tooltip as UiToolTip,
-	TooltipContent,
-	TooltipTrigger,
-} from "../components/ui/tooltip";
-import { statisticsService } from "../services/stadistics";
-import { campaignsService } from "../services/campaignsService";
+
 import {
 	Select,
 	SelectContent,
@@ -52,7 +16,10 @@ import {
 	SelectValue,
 } from "../components/ui/select";
 import { twMerge } from "tailwind-merge";
-import useCampaigns from "../hooks/useCampaigns";
+import StadisticsPieComponent from "../components/StadisticsPieComponent.tsx";
+import useStadistics from "../hooks/useStadistics.tsx";
+import { DetailsStates } from "../components/DetailsStates.tsx";
+import StadisticsAreaChartComponent from "../components/StadisticsAreaChartComponent.tsx";
 
 const messagesStatus = {
 	sent: {
@@ -76,514 +43,36 @@ const messagesStatus = {
 		Icon: <X className="w-4 h-4" />,
 	}
 };
-const dataOfLineChart = [
-	{
-		name: "Junio  ",
-		v: 4000,
-		nv: 2400,
-		amt: 2400,
-	},
-	{
-		name: "Julio",
-		v: 3000,
-		nv: 1398,
-		amt: 2210,
-	},
-	{
-		name: "Agosto",
-		v: 2000,
-		nv: 9800,
-		amt: 2290,
-	},
-];
 const COLORS = ["#0088FE", "#ce1212", "#FFBB28", "#FF8042"];
 
-const statusColors = {
-	read: 'text-blue-500',
-	delivered: 'text-green-500',
-	undelivered: 'text-yellow-500',
-	failed: 'text-red-500',
-	other: 'text-purple-500'
-};
 
-const statusIcons = {
-	read: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-		</svg>
-	),
-	delivered: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-		</svg>
-	),
-	undelivered: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-		</svg>
-	),
-	failed: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-		</svg>
-	),
-	other: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-		</svg>
-	),
-	total: (
-		<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-		</svg>
-	)
-};
 
-interface MessageStadistics {
-	name: string;
-	label: string;
-	value: number;
-	percentage: number;
-	icon: React.ReactNode;
-	color: string;
-	tooltip?: string;
-	isTotal?: boolean;
-}
 
-interface CampaignMessagesStadistics {
-	messageStats: MessageStadistics[],
-	totalMessages: number
-}
+
 
 
 
 export const StadisticsPage: React.FC = () => {
-	const { allCampaigns } = useCampaigns();
-	const [isLoading, setIsLoading] = useState(true);
-	const [generalStatistics, setGeneralStatistics] = useState<
-		TypeStatistics | undefined
-	>(undefined);
-	const [campaigns, setCampaigns] = useState<CampaignType[] | []>(
-		[]
-	);
-	const [selectedCampaign, setSelectedCampaign] =
-		useState<CampaignType | null>(null);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [region, setRegion] = useState("");
-	const [ciudad, setCiudad] = useState("");
-	const [estado, setEstado] = useState("");
-	const [vendedor, setVendedor] = useState("");
-	const [modalidad, setModalidad] = useState("");
-	const [campaignMessagesStadistics, setCampaignMessagesStadistics] = useState<CampaignMessagesStadistics>({
-		messageStats: [],
-		totalMessages: 0
-	});
-	const [
+
+	const {
+		selectedCampaign,
+		selectFields,
+		generalStatistics,
+		isLoading, totalDeClientes,
+		setSelectedCampaign,
+		campaigns,
+		dataToShowInGraphStatus,
+		dataToShowInGraphMessage,
+		setIsModalOpen,
+		isModalOpen,
 		campaignSelectedToSeeStatistics,
 		setCampaignSelectedToSeeStatistics,
-	] = useState(0);
-	const [dataToShowInGraphStatus, setDataToShowInGraphStatus] =
-		useState<{ name: string; value: number }[]>([]);
-	const [dataToShowInGraphMessage, setDataToShowInGraphMessage] =
-		useState<{ name: string; value: number }[]>([]);
-	useEffect(() => {
-		setCampaignSelectedToSeeStatistics(
-			allCampaigns.length > 0
-				? allCampaigns[allCampaigns.length - 1].id
-				: 0
-		);
-	}, [allCampaigns]);
-	useEffect(() => {
-		const dataGraphByCampaignStatus = [
-			{
-				name: "verificado",
-				value: allCampaigns
-					.filter(
-						(c) =>
-							c.id ===
-							Number(campaignSelectedToSeeStatistics)
-					)
-					.reduce(
-						(acc, c) =>
-							acc +
-							c.messages.filter(
-								(m) =>
-									m.phoneNumber.status ===
-									"verificado"
-							).length,
-						0
-					), // Contar mensajes verificados
-			},
-			{
-				name: "no verificado",
-				value: allCampaigns
-					.filter(
-						(c) =>
-							c.id ===
-							Number(campaignSelectedToSeeStatistics)
-					)
-					.reduce(
-						(acc, c) =>
-							acc +
-							c.messages.filter(
-								(m) =>
-									m.phoneNumber.status !==
-									"verificado"
-							).length,
-						0
-					),
-			},
-		];
+		StatisticsCard,
+		allCampaigns,
+		dataToShowInGraphAreaMemo,
+		campaignMessagesStadistics
+	} = useStadistics()
 
-		const dataGraphByCampaignMessage = [
-			{
-				name: "Si",
-				value: allCampaigns
-					.filter(
-						(c) =>
-							c.id ===
-							Number(campaignSelectedToSeeStatistics)
-					)
-					.reduce(
-						(acc, c) =>
-							acc +
-							c.messages.filter(
-								(m) => m.responseReceived === "Si"
-							).length,
-						0
-					),
-			},
-			{
-				name: "No",
-				value: allCampaigns
-					.filter(
-						(c) =>
-							c.id ===
-							Number(campaignSelectedToSeeStatistics)
-					)
-					.reduce(
-						(acc, c) =>
-							acc +
-							c.messages.filter(
-								(m) => m.responseReceived !== "Si"
-							).length,
-						0
-					),
-			},
-		];
-		const [selectedCampaign] = allCampaigns.filter(
-			(c) =>
-				c.id === Number(campaignSelectedToSeeStatistics)
-		);
-
-		if (selectedCampaign) {
-			const defaultStatuses = ['read', 'delivered', 'undelivered', 'failed'];
-			const allStatuses = [...new Set(selectedCampaign.messages.map(m => m.messageStatus))];
-			const totalMessages = selectedCampaign.messages.length;
-
-			const messageStats: MessageStadistics[] = defaultStatuses.map(status => {
-				const count = selectedCampaign.messages.filter(
-					m => m.messageStatus === status
-				).length;
-
-				const percentage = totalMessages > 0 ? (count / totalMessages * 100).toFixed(1) : 0;
-
-				const labels: Record<string, string> = {
-					read: 'Mensajes Leídos',
-					delivered: 'Entregados',
-					undelivered: 'No Entregados',
-					failed: 'Fallidos'
-				};
-
-				return {
-					name: status,
-					label: labels[status] || status,
-					value: count,
-					percentage: Number(percentage),
-					icon: statusIcons[status as keyof typeof statusIcons] || statusIcons.other,
-					color: statusColors[status as keyof typeof statusColors] || statusColors.other,
-					tooltip: labels[status] || status
-				};
-			});
-
-			// Calcular "otros" estados
-			const otherStatuses = allStatuses.filter(
-				status => !defaultStatuses.includes(status)
-			);
-
-			if (otherStatuses.length > 0) {
-				const otherCount = otherStatuses.reduce((total, status) => {
-					return total + selectedCampaign.messages.filter(
-						m => m.messageStatus === status
-					).length;
-				}, 0);
-
-				const otherPercentage = totalMessages > 0 ? (otherCount / totalMessages * 100).toFixed(1) : 0;
-
-				messageStats.push({
-					name: 'other',
-					label: 'Otros',
-					value: otherCount,
-					percentage: Number(otherPercentage),
-					tooltip: `Estados: ${otherStatuses.join(', ')}`,
-					icon: statusIcons.other,
-					color: statusColors.other
-				});
-
-
-			}
-			// Agregar la tarjeta de total al final
-			messageStats.push({
-				name: 'total',
-				label: 'Total de Mensajes',
-				value: totalMessages,
-				percentage: 100,
-				color: 'text-blue-500',
-				icon: statusIcons.total,
-				tooltip: 'Total de Mensajes',
-				isTotal: true // Bandera para identificar la tarjeta de total
-			});
-
-			// Ordenar por cantidad (opcional)
-			messageStats.sort((a, b) => {
-				if (a.isTotal) return 1; // Mover total al final
-				if (b.isTotal) return -1;
-				return b.value - a.value;
-			});
-
-			setCampaignMessagesStadistics({ messageStats, totalMessages });
-		}
-
-		setDataToShowInGraphMessage(dataGraphByCampaignMessage);
-		setDataToShowInGraphStatus(dataGraphByCampaignStatus);
-	}, [campaignSelectedToSeeStatistics, allCampaigns]);
-
-	const renderLabel = (entry: { name: string; value: number }) => {
-		const total = dataToShowInGraphStatus.reduce(
-			(acc, item) => acc + item.value,
-			0
-		);
-		const percentage = ((entry.value / total) * 100).toFixed(2); // Calcula el porcentaje
-		return `${percentage}%`; // Muestra el porcentaje
-	};
-
-	const totalDeClientes = useMemo(() => {
-		if (!generalStatistics) return 0;
-		return (
-			generalStatistics.verificado +
-			generalStatistics["no verificado"] +
-			generalStatistics["por verificar"]
-		);
-	}, [generalStatistics]);
-
-	const chartData = useMemo(
-		() => [
-			{
-				estado: "verificado",
-				cantidad: generalStatistics
-					? generalStatistics.verificado
-					: 0,
-				fill: "var(--estado-verificado)",
-			},
-			{
-				estado: "noVerificado",
-				cantidad: generalStatistics
-					? generalStatistics["no verificado"]
-					: 0,
-				fill: "var(--estado-noVerificado)",
-			},
-			{
-				estado: "porVerificar",
-				cantidad: generalStatistics
-					? generalStatistics["por verificar"]
-					: 0,
-				fill: "var(--estado-porVerificar)",
-			},
-		],
-		[generalStatistics]
-	);
-
-	const chartConfig = {
-		cantidad: {
-			label: "Visitors",
-		},
-		verificado: {
-			label: "Verificado",
-			color: "var(--estado-verificado)",
-		},
-		noVerificado: {
-			label: "No Verificado",
-			color: "var(--estado-noVerificado)",
-		},
-		porVerificar: {
-			label: "Por Verificar",
-			color: "var(--estado-porVerificar)",
-		},
-	} satisfies ChartConfig;
-
-	const StatisticsCard = useMemo(
-		() => (
-			<Card className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
-				<CardHeader className="flex items-center justify-between pb-0">
-					<div className="flex flex-col">
-						<CardTitle>Estado de clientes</CardTitle>
-						<CardDescription>
-							Ultimos 30 dias
-						</CardDescription>
-					</div>
-					<UiToolTip delayDuration={500}>
-						<TooltipTrigger disabled={isLoading}>
-							<motion.div
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-								onClick={() =>
-									fetchGeneralStatistics("refresh")
-								}
-								className="p-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-							>
-								<RefreshCw
-									className={`w-4 h-4 ${isLoading
-										? "animate-spin"
-										: ""
-										}`}
-								/>
-							</motion.div>
-						</TooltipTrigger>
-						<TooltipContent side="top" sideOffset={5}>
-							<p className="max-w-xs">
-								Vuelve a calcular los datos (ten en
-								cuenta que esto representa un consumo
-								considerable de los recursos del
-								servidor según la cantidad de datos
-								que se procesen, este cálculo se hace
-								automáticamente cada 6 horas)
-							</p>
-						</TooltipContent>
-					</UiToolTip>
-				</CardHeader>
-				<CardContent className="flex-1 pb-0">
-					<ChartContainer
-						config={chartConfig}
-						className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0 max-w-[300px] w-full"
-					>
-						<PieChart>
-							<ChartTooltip
-								content={
-									<ChartTooltipContent hideLabel />
-								}
-							/>
-							<Pie
-								data={chartData}
-								dataKey="cantidad"
-								label
-								nameKey="estado"
-							/>
-						</PieChart>
-					</ChartContainer>
-				</CardContent>
-				<CardFooter className="flex-col gap-2 text-sm">
-					<div className="flex items-center gap-2 leading-none font-regular">
-						{generalStatistics && (
-							<p className="text-center">
-								en los ultimos 30 dias de
-								<span className="font-bold ml-1">
-									{totalDeClientes}
-								</span>{" "}
-								clientes, el
-								<span className="font-bold ml-1">
-									{calcularPorcentajeVerificados(
-										generalStatistics
-									)}
-								</span>{" "}
-								estan verificados
-							</p>
-						)}{" "}
-						<TrendingUp className="h-4 w-4" />
-					</div>
-					<div className="text-muted-foreground leading-none">
-						Total de clientes los ultimos 30 dias
-					</div>
-				</CardFooter>
-			</Card>
-		),
-		[generalStatistics, chartData, isLoading, totalDeClientes]
-	);
-
-	function calcularPorcentajeVerificados(
-		stats: TypeStatistics
-	): string {
-		const totalNumeros =
-			stats.verificado +
-			stats["no verificado"] +
-			stats["por verificar"];
-
-		if (totalNumeros === 0) {
-			return "0.00%"; // Evita la división por cero
-		}
-
-		const porcentaje = (stats.verificado / totalNumeros) * 100;
-
-		return `${porcentaje.toFixed(2)}%`; // Formatea a dos decimales
-	}
-
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const [stats, campaignsData] = await Promise.all([
-					fetchGeneralStatistics(),
-					fetchCampaigns(),
-				]);
-				setCampaigns(campaignsData);
-				setGeneralStatistics(stats);
-			} catch (error) {
-				console.error("Error fetching data:", error);
-			}
-		};
-
-		fetchData();
-	}, []);
-
-	async function fetchCampaigns() {
-		setIsLoading(true);
-		return campaignsService
-			.getCampaigns()
-			.then((data) => {
-				console.log("obteniendo campañas:");
-				console.log(data);
-				setIsLoading(false);
-				return data; // Asegúrate de retornar los datos
-			})
-			.catch((error) => {
-				console.error("Error fetching campaigns:", error);
-				setIsLoading(false);
-				throw error; // Propaga el error para que se maneje en el catch del Promise.all
-			});
-	}
-
-	async function fetchGeneralStatistics(
-		type: "cached" | "refresh" = "cached"
-	) {
-		setIsLoading(true);
-		return statisticsService
-			.getGeneralStatistics(type)
-			.then((data: TypeStatistics) => {
-				console.log("obteniendo estadisticas:");
-				setGeneralStatistics(data);
-				return data; // Asegúrate de devolver los datos
-			})
-			.catch((error) => {
-				console.error(
-					"Error fetching general statistics:",
-					error
-				);
-				throw error; // Propaga el error para que se maneje en el catch del Promise.all
-			})
-			.finally(() => {
-				setIsLoading(false);
-			});
-	}
-	
 	return (
 		<div className="w-full flex justify-center items-start gap-5">
 			<div className="max-w-7xl w-full space-y-6">
@@ -647,232 +136,41 @@ export const StadisticsPage: React.FC = () => {
 								</p>
 							</div>
 						</div>
-						<div className="w-full grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 my-6 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.2, delay: 0.1 }}
-								className="flex flex-col justify-center items-start space-y-2 w-full"
-							>
-								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-									MODALIDAD
-								</label>
-								<Select
-									value={modalidad}
-									onValueChange={setModalidad}
+						<div
+							className="w-full grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6 my-6 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+							{selectFields.map((field, idx) => (
+								<motion.div
+									key={field.label}
+									initial={{ opacity: 0, y: 20 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -20 }}
+									transition={{ duration: 0.2, delay: 0.1 * (idx + 1) }}
+									className="flex flex-col justify-center items-start space-y-2 w-full"
 								>
-									<SelectTrigger
-										style={{
-											padding: ".5rem 1rem",
-											minHeight: "42px",
-										}}
-										className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<SelectValue placeholder="Selecciona una región" />
-									</SelectTrigger>
-									<SelectContent className="bg-white dark:bg-gray-700">
-										<SelectItem
-											className={twMerge(
-												region === "region1" &&
-												"bg-blue-600 text-white"
-											)}
-											value="region1"
+									<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
+										{field.label}
+									</label>
+									<Select value={field.value} onValueChange={field.setValue}>
+										<SelectTrigger
+											style={{ padding: ".5rem 1rem", minHeight: "42px" }}
+											className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 										>
-											Región 1
-										</SelectItem>
-										<SelectItem
-											className={twMerge(
-												region === "region2" &&
-												"bg-blue-600 text-white"
-											)}
-											value="region2"
-										>
-											Región 2
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</motion.div>
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.2, delay: 0.1 }}
-								className="flex flex-col justify-center items-start space-y-2 w-full"
-							>
-								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-									REGIÓN
-								</label>
-								<Select
-									value={region}
-									onValueChange={setRegion}
-								>
-									<SelectTrigger
-										style={{
-											padding: ".5rem 1rem",
-											minHeight: "42px",
-										}}
-										className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<SelectValue placeholder="Selecciona una región" />
-									</SelectTrigger>
-									<SelectContent className="bg-white dark:bg-gray-700">
-										<SelectItem
-											className={twMerge(
-												region === "region1" &&
-												"bg-blue-600 text-white"
-											)}
-											value="region1"
-										>
-											Región 1
-										</SelectItem>
-										<SelectItem
-											className={twMerge(
-												region === "region2" &&
-												"bg-blue-600 text-white"
-											)}
-											value="region2"
-										>
-											Región 2
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</motion.div>
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.2, delay: 0.3 }}
-								className="flex flex-col justify-center items-start space-y-2 w-full"
-							>
-								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-									CIUDAD
-								</label>
-								<Select
-									value={ciudad}
-									onValueChange={setCiudad}
-								>
-									<SelectTrigger
-										style={{
-											padding: ".5rem 1rem",
-											minHeight: "42px",
-										}}
-										className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<SelectValue placeholder="Selecciona una ciudad" />
-									</SelectTrigger>
-									<SelectContent className="bg-white dark:bg-gray-700">
-										<SelectItem
-											className={twMerge(
-												ciudad === "city1" &&
-												"bg-blue-600 text-white"
-											)}
-											value="city1"
-										>
-											Ciudad 1
-										</SelectItem>
-										<SelectItem
-											className={twMerge(
-												ciudad === "city2" &&
-												"bg-blue-600 text-white"
-											)}
-											value="city2"
-										>
-											Ciudad 2
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</motion.div>
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.2, delay: 0.5 }}
-								className="flex flex-col justify-center items-start space-y-2 w-full"
-							>
-								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-									VENDEDOR
-								</label>
-								<Select
-									value={vendedor}
-									onValueChange={setVendedor}
-								>
-									<SelectTrigger
-										style={{
-											padding: ".5rem 1rem",
-											minHeight: "42px",
-										}}
-										className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<SelectValue placeholder="Selecciona un vendedor" />
-									</SelectTrigger>
-									<SelectContent className="bg-white dark:bg-gray-700">
-										<SelectItem
-											className={twMerge(
-												vendedor === "seller1" &&
-												"bg-blue-600 text-white"
-											)}
-											value="seller1"
-										>
-											Vendedor 1
-										</SelectItem>
-										<SelectItem
-											className={twMerge(
-												vendedor === "seller2" &&
-												"bg-blue-600 text-white"
-											)}
-											value="seller2"
-										>
-											Vendedor 2
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</motion.div>
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: -20 }}
-								transition={{ duration: 0.2, delay: 0.5 }}
-								className="flex flex-col justify-center items-start space-y-2 w-full"
-							>
-								<label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
-									ESTADO
-								</label>
-								<Select
-									value={estado}
-									onValueChange={setEstado}
-								>
-									<SelectTrigger
-										style={{
-											padding: ".5rem 1rem",
-											minHeight: "42px",
-										}}
-										className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<SelectValue placeholder="Selecciona un vendedor" />
-									</SelectTrigger>
-									<SelectContent className="bg-white dark:bg-gray-700">
-										<SelectItem
-											className={twMerge(
-												vendedor === "seller1" &&
-												"bg-blue-600 text-white"
-											)}
-											value="seller1"
-										>
-											Vendedor 1
-										</SelectItem>
-										<SelectItem
-											className={twMerge(
-												vendedor === "seller2" &&
-												"bg-blue-600 text-white"
-											)}
-											value="seller2"
-										>
-											Vendedor 2
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</motion.div>
+											<SelectValue placeholder={field.placeholder} />
+										</SelectTrigger>
+										<SelectContent className="bg-white dark:bg-gray-700">
+											{field.options.map((option) => (
+												<SelectItem
+													key={option.value}
+													className={twMerge(field.value === option.value && "bg-blue-600 text-white")}
+													value={option.value}
+												>
+													{option.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</motion.div>
+							))}
 						</div>
 					</motion.div>
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-8 mb-8 ">
@@ -880,273 +178,102 @@ export const StadisticsPage: React.FC = () => {
 							{campaignMessagesStadistics
 								&& campaignMessagesStadistics.messageStats
 								&& campaignMessagesStadistics.messageStats.map((stat, index) => (
-										<motion.div
-											initial={{ opacity: 0, x: 80 }}
-											animate={{ opacity: 1, x: 0 }}
-											exit={{ opacity: 0, x: -80 }}
-											transition={{ duration: 0.2, delay: index * 0.2, ease: 'easeIn', stiffness: 100 }}
-											className={twMerge(`
+									<motion.div
+										initial={{ opacity: 0, x: 80 }}
+										animate={{ opacity: 1, x: 0 }}
+										key={stat.label}
+										exit={{ opacity: 0, x: -80 }}
+										transition={{ duration: 0.2, delay: index * 0.2, ease: 'easeIn', stiffness: 100 }}
+										className={twMerge(`
 												relative flex flex-col items-center p-4 rounded-lg border 
 												transition-all duration-200 hover:shadow-md`,
-												stat.isTotal ? 'justify-center border-blue-200 bg-blue-600/50 dark:bg-blue-900 dark:bg-opacity-10 dark:border-blue-800' : `${stat.color.replace('text', 'border')} bg-white dark:bg-gray-800`)}
-										>
-											{stat.isTotal ? (
-												// Contenido de la tarjeta de total
-												<>
-													<div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-														<svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-														</svg>
-													</div>
-													<span className="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">
-														{stat.value}
-													</span>
-													<span className="text-sm text-center text-blue-600 dark:text-blue-400">
-														{stat.label}
-													</span>
-												</>
-											) : (
-												// Contenido de las tarjetas normales
-												<>
-													<div className={`mb-2 p-2 rounded-full ${stat.color} bg-opacity-10`}>
-														{stat.icon}
-													</div>
-													<span className={`text-2xl font-bold text-center ${stat.color}`}>
-														{stat.value}
-													</span>
-													<span className="text-sm text-center text-gray-600 dark:text-gray-300 mb-1">
-														{stat.label}
-													</span>
-													<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
-														<div
-															className={`h-1.5 rounded-full ${stat.color.replace('text', 'bg')}`}
-															style={{ width: `${stat.percentage}%` }}
-														></div>
-													</div>
-													<span className="text-xs text-center text-gray-500 mt-1">
-														{stat.percentage}%
-													</span>
-												</>
-											)}
+											stat.isTotal ? 'justify-center border-blue-200 bg-blue-600/50 dark:bg-blue-900 dark:bg-opacity-10 dark:border-blue-800' : `${stat.color.replace('text', 'border')} bg-white dark:bg-gray-800`)}
+									>
+										{stat.isTotal ? (
+											// Contenido de la tarjeta de total
+											<>
+												<div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+													<svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+													</svg>
+												</div>
+												<span className="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">
+													{stat.value}
+												</span>
+												<span className="text-sm text-center text-blue-600 dark:text-blue-400">
+													{stat.label}
+												</span>
+											</>
+										) : (
+											// Contenido de las tarjetas normales
+											<>
+												<div className={`mb-2 p-2 rounded-full ${stat.color} bg-opacity-10`}>
+													{stat.icon}
+												</div>
+												<span className={`text-2xl font-bold text-center ${stat.color}`}>
+													{stat.value}
+												</span>
+												<span className="text-sm text-center text-gray-600 dark:text-gray-300 mb-1">
+													{stat.label}
+												</span>
+												<div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
+													<div
+														className={`h-1.5 rounded-full ${stat.color.replace('text', 'bg')}`}
+														style={{ width: `${stat.percentage}%` }}
+													></div>
+												</div>
+												<span className="text-xs text-center text-gray-500 mt-1">
+													{stat.percentage}%
+												</span>
+											</>
+										)}
 
-											{/* Tooltip para "Otros" */}
-											{stat.tooltip && (
-												<div className="absolute top-2 right-2">
-													<div className="relative group">
-														<button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-															<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-															</svg>
-														</button>
-														<div className="absolute z-10 hidden group-hover:block w-48 p-2 mt-1 text-xs text-white bg-gray-800 rounded shadow-lg right-0">
-															{stat.tooltip}
-														</div>
+										{/* Tooltip para "Otros" */}
+										{stat.tooltip && (
+											<div className="absolute top-2 right-2">
+												<div className="relative group">
+													<button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+														</svg>
+													</button>
+													<div className="absolute z-10 hidden group-hover:block w-48 p-2 mt-1 text-xs text-white bg-gray-800 rounded shadow-lg right-0">
+														{stat.tooltip}
 													</div>
 												</div>
-											)}
-										</motion.div>
-										
+											</div>
+										)}
+									</motion.div>
 								))}
 						</AnimatePresence>
 					</div>
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-x-6 space-y-6 mb-6">
+					<div
+						className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-x-6 space-y-6 mb-6">
 						{campaignSelectedToSeeStatistics !== 0 ? (
-							<div className="w-full flex items-start flex-wrap space-x-6 space-y-6">
-								<div className="flex flex-col bg-white dark:bg-gray-800 rounded-xl flex-1 p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-									<h2 className="text-xl font-bold text-gray-900 dark:text-white">
-										Estadisticas de la campaña #
-										{campaignSelectedToSeeStatistics}
-									</h2>
-									<p>Estados de los Teléfonos</p>
-									<div className="flex flex-col items-center mt-6 font-bold">
-										<h3>
-											VERIFICADOS / NO VERIFICADOS
-										</h3>
-										<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-											<PieChart
-												width={400}
-												height={200}
-											>
-												<Pie
-													data={
-														dataToShowInGraphStatus
-													}
-													cx={180}
-													cy={100}
-													innerRadius={50}
-													outerRadius={80}
-													fill="#8884d8"
-													paddingAngle={5}
-													dataKey="value"
-													label={renderLabel}
-												>
-													{dataToShowInGraphStatus.map(
-														(
-															entry,
-															index
-														) => (
-															<Cell
-																key={`cell-${entry.name}`}
-																fill={
-																	COLORS[
-																	index %
-																	COLORS.length
-																	]
-																}
-															/>
-														)
-													)}
-												</Pie>
-												<Legend
-													layout="vertical"
-													verticalAlign="middle"
-													align="right"
-													wrapperStyle={{
-														right: 0,
-														top: 20,
-													}}
-												/>
-											</PieChart>
-										</div>
+							<div className="w-full flex flex-col items-start justify-beetwen flex-wrap space-x-6 space-y-6">
+								<div className="flex space-x-6 w-full flex-wrap">
+									<div className="w-full flex-1 min-w-[500px]">
+										<StadisticsPieComponent
+											title={
+												`Estadisticas de la campaña #${campaignSelectedToSeeStatistics}`
+											}
+											subtitle={'Estados de los Teléfonos'}
+											data={dataToShowInGraphStatus}
+											labelPassed={'verificados'}
+											footerText={'VERIFICADOS / NO VERIFICADOS'}
+											subFooterText={'Detalle de Estados'}
+										/>
+									</div>
+									<div className="w-full flex-1 min-w-[500px]">
+										<StadisticsPieComponent title={
+											`Estadisticas de la campaña #${campaignSelectedToSeeStatistics}`
+										} subtitle={'Respuestas a los mensajes'} data={dataToShowInGraphMessage}
+											labelPassed={'Si'} footerText={'SI / NO'} subFooterText={
+												'Detalle de respuestas a los mensajes'
+											} />
 									</div>
 								</div>
-								<div className="flex flex-col bg-white dark:bg-gray-800 rounded-xl flex-1 p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-									<h2 className="text-xl font-bold text-gray-900 dark:text-white">
-										Estadisticas de la campaña #
-										{campaignSelectedToSeeStatistics}
-									</h2>
-									<p>Respuesta a los mensajes</p>
-
-									<div className="flex flex-col items-center mt-6 font-bold">
-										<h3>SI / NO</h3>
-										<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-											<PieChart
-												width={350}
-												height={200}
-											>
-												<Pie
-													data={
-														dataToShowInGraphMessage
-													}
-													cx={180}
-													cy={100}
-													innerRadius={50}
-													outerRadius={80}
-													fill="#8884d8"
-													paddingAngle={3}
-													dataKey="value"
-													label={renderLabel}
-												>
-													{dataToShowInGraphMessage.map(
-														(
-															entry,
-															index
-														) => (
-															<Cell
-																key={`cell-${entry.name}`}
-																fill={
-																	COLORS[
-																	index %
-																	COLORS.length
-																	]
-																}
-															/>
-														)
-													)}
-												</Pie>
-												<Legend
-													layout="vertical"
-													verticalAlign="middle"
-													align="right"
-													wrapperStyle={{
-														right: 0,
-														top: 20,
-													}}
-												/>
-											</PieChart>
-										</div>
-									</div>
-								</div>
-								<div className=" flex flex-col bg-white dark:bg-gray-800 rounded-xl flex-1 min-w-[400px] p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-									{dataToShowInGraphStatus.length >
-										0 ? (
-										<>
-											<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-												Detalle de Estados
-											</h2>
-											<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-												{dataToShowInGraphStatus.map(
-													(data, index) => (
-														<div
-															key={index}
-															className="flex flex-col items-center p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
-														>
-															<div
-																className="w-12 h-12 flex items-center justify-center rounded-full mb-2"
-																style={{
-																	backgroundColor:
-																		COLORS[
-																		index %
-																		COLORS.length
-																		],
-																}}
-															>
-																<span className="text-white font-bold text-lg">
-																	{
-																		data.value
-																	}
-																</span>
-															</div>
-															<span className="text-gray-900 dark:text-white font-medium">
-																{
-																	data.name
-																}
-															</span>
-														</div>
-													)
-												)}
-												<div
-													key={3}
-													className="flex flex-col items-center p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
-												>
-													<div
-														className="w-12 h-12 flex items-center justify-center rounded-full mb-2"
-														style={{
-															backgroundColor:
-																COLORS[
-																3 %
-																COLORS.length
-																],
-														}}
-													>
-														<span className="text-white font-bold text-lg">
-															+{20}
-														</span>
-													</div>
-													<span className="text-gray-900 dark:text-white font-medium">
-														Mes anterior
-													</span>
-												</div>
-											</div>
-											<div className="rounded-lg p-6 bg-green-500/10 text-green-700 border border-green-200 dark:border-green-700">
-												<p>
-													Total de números:{" "}
-													{dataToShowInGraphStatus.reduce(
-														(acc, curr) =>
-															acc +
-															curr.value,
-														0
-													)}
-												</p>
-											</div>
-										</>
-									) : (
-										<p className="text-gray-600 dark:text-gray-400">
-											No hay datos disponibles para
-											mostrar.
-										</p>
-									)}
-								</div>
+								{/* <DetailsStates dataToShowInGraphStatus={dataToShowInGraphStatus} COLORS={COLORS} /> */}
 							</div>
 						) : (
 							<p className="text-gray-600 dark:text-gray-400">
@@ -1155,40 +282,7 @@ export const StadisticsPage: React.FC = () => {
 							</p>
 						)}
 					</div>
-					<div className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 w-fit">
-						<h2 className="text-xl font-bold text-gray-900 dark:text-white">
-							Estadisticas de la campaña #
-							{campaignSelectedToSeeStatistics}
-						</h2>
-						<p>Comparación de respuestas</p>
-						<div className="mt-6">
-							<LineChart
-								width={500}
-								height={300}
-								data={dataOfLineChart}
-								margin={{
-									top: 5,
-									right: 30,
-									left: 20,
-									bottom: 5,
-								}}
-							>
-								<CartesianGrid strokeDasharray="3 3" />
-								<XAxis dataKey="name" />
-								<YAxis />
-								<Tooltip />
-								<Legend />
-								<Line type="monotone" dataKey="v" stroke="#8884d8" strokeDasharray="5 5" />
-								<Line type="monotone" dataKey="nv" stroke="#82ca9d" strokeDasharray="3 4 5 2" />
-							</LineChart>
-						</div>
-					</div>
-
-
-
 				</div>
-
-
 				{/* Content */}
 				<AnimatePresence mode="wait">
 					{isLoading ? (
@@ -1211,34 +305,42 @@ export const StadisticsPage: React.FC = () => {
 					) : (
 						generalStatistics &&
 						totalDeClientes && (
-							<>
-								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+							<div className="flex w-full space-x-6 flex-wrap-reverse items-start">
+								<div className="w-fit min-w-[403.46px] flex flex-col justify-beetwen flex-wrap h-full space-y-9.5">
+									<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+										<motion.div
+											initial={{ opacity: 0, y: 20 }}
+											animate={{ opacity: 1, y: 0 }}
+										>
+											<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+												Estadisticas de los ultimos 30 dias
+											</h1>
+											<p className="text-gray-600 dark:text-gray-400">
+												Estadisticas de los clientes registrados y validados
+											</p>
+										</motion.div>
+									</div>
 									<motion.div
 										initial={{ opacity: 0, y: 20 }}
 										animate={{ opacity: 1, y: 0 }}
+										exit={{ opacity: 0, y: -20 }}
 									>
-										<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-											Estadisticas
-										</h1>
-										<p className="text-gray-600 dark:text-gray-400">
-											Estadisticas de los numeros de telefono
-											registrados y validados
-										</p>
+										{StatisticsCard}
 									</motion.div>
 								</div>
-								<motion.div
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -20 }}
-									className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-								>
-									{StatisticsCard}
-								</motion.div>
-							</>
+								<StadisticsAreaChartComponent
+									title={'Grafico de area'}
+									description={'Datos sobre telefonos verificados y no verificados en rango de tiempo'}
+									labelPassed={'verificado'}
+									data={dataToShowInGraphAreaMemo}
+									colors={{ verificado: "#22c55e", noVerificado: "#ef4444" }}
+								/>
+							</div>
 
 						)
 					)}
 				</AnimatePresence>
+
 
 				{/* Header */}
 				{campaigns && (
@@ -1259,26 +361,86 @@ export const StadisticsPage: React.FC = () => {
 							</motion.div>
 						</div>
 						<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-							{campaigns
-								.slice() // Crea una copia del array
-								.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((campaign) => (
-									<motion.div
-										key={campaign.id}
-										initial={{ opacity: 0, y: 20 }}
-										animate={{ opacity: 1, y: 0 }}
-										exit={{ opacity: 0, y: -20 }}
-										transition={{ duration: 0.3 }}
-										className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
-									>
-										<div className="p-6">
-											<div className="flex justify-between items-start mb-4">
+							{campaigns.map((campaign) => (
+								<motion.div
+									key={campaign.id}
+									initial={{ opacity: 0, y: 20 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -20 }}
+									transition={{ duration: 0.3 }}
+									className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
+								>
+									<div className="p-6">
+										<div className="flex justify-between items-start mb-4">
+											<div>
+												<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+													Campaña #{campaign.id}
+												</h3>
+												<p className="text-sm text-gray-500 dark:text-gray-400">
+													{new Date(
+														campaign.createdAt
+													).toLocaleDateString(
+														"es-ES",
+														{
+															year: "numeric",
+															month: "long",
+															day: "numeric",
+															hour: "2-digit",
+															minute: "2-digit",
+														}
+													)}
+												</p>
+											</div>
+											<div
+												className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">
+												{campaign.messages.length}{" "}
+												mensajes
+											</div>
+										</div>
+
+										<div className="space-y-3 mt-4">
+											<div>
+												<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+													Plantilla usada
+												</p>
+												<p className="text-sm text-gray-900 dark:text-white truncate">
+													{campaign.templateUsed ||
+														"Sin plantilla"}
+												</p>
+											</div>
+											{/*<div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</p>
+                  <div className="flex items-center mt-1">
+                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                      campaign.sentAt ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></span>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {campaign.sentAt ? 'Enviada' : 'Pendiente de envío'}
+                    </span>
+                  </div>
+                </div> */}
+
+											<div>
+												<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+													Creada por
+												</p>
+												<div className="flex items-center mt-1">
+													<span className="text-sm text-gray-900 dark:text-white">
+														{campaign.createdByUser ===
+															1
+															? "Admin"
+															: "Usuario"}
+													</span>
+												</div>
+											</div>
+											{campaign.sentAt && (
 												<div>
-													<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-														Campaña #{campaign.id}
-													</h3>
-													<p className="text-sm text-gray-500 dark:text-gray-400">
+													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+														Enviada el
+													</p>
+													<p className="text-sm text-gray-900 dark:text-white">
 														{new Date(
-															campaign.createdAt
+															campaign.sentAt
 														).toLocaleDateString(
 															"es-ES",
 															{
@@ -1291,91 +453,31 @@ export const StadisticsPage: React.FC = () => {
 														)}
 													</p>
 												</div>
-												<div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">
-													{campaign.messages.length}{" "}
-													mensajes
-												</div>
-											</div>
-
-											<div className="space-y-3 mt-4">
-												<div>
-													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-														Plantilla usada
-													</p>
-													<p className="text-sm text-gray-900 dark:text-white truncate">
-														{campaign.templateUsed ||
-															"Sin plantilla"}
-													</p>
-												</div>
-												{/*<div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</p>
-                  <div className="flex items-center mt-1">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                      campaign.sentAt ? 'bg-green-500' : 'bg-yellow-500'
-                    }`}></span>
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {campaign.sentAt ? 'Enviada' : 'Pendiente de envío'}
-                    </span>
-                  </div>
-                </div> */}
-
-												<div>
-													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-														Creada por
-													</p>
-													<div className="flex items-center mt-1">
-														<span className="text-sm text-gray-900 dark:text-white">
-															{campaign.createdByUser ===
-																1
-																? "Admin"
-																: "Usuario"}
-														</span>
-													</div>
-												</div>
-												{campaign.sentAt && (
-													<div>
-														<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-															Enviada el
-														</p>
-														<p className="text-sm text-gray-900 dark:text-white">
-															{new Date(
-																campaign.sentAt
-															).toLocaleDateString(
-																"es-ES",
-																{
-																	year: "numeric",
-																	month: "long",
-																	day: "numeric",
-																	hour: "2-digit",
-																	minute: "2-digit",
-																}
-															)}
-														</p>
-													</div>
-												)}
-											</div>
+											)}
 										</div>
+									</div>
 
-										<div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-											<div className="flex justify-between items-center">
-												<span className="text-xs text-gray-500 dark:text-gray-400">
-													ID: {campaign.id}
-												</span>
-												<button
-													onClick={() => {
-														setSelectedCampaign(
-															campaign
-														);
-														setIsModalOpen(true);
-													}}
-													className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-												>
-													Ver detalles
-												</button>
-											</div>
+									<div
+										className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+										<div className="flex justify-between items-center">
+											<span className="text-xs text-gray-500 dark:text-gray-400">
+												ID: {campaign.id}
+											</span>
+											<button
+												onClick={() => {
+													setSelectedCampaign(
+														campaign
+													);
+													setIsModalOpen(true);
+												}}
+												className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+											>
+												Ver detalles
+											</button>
 										</div>
-									</motion.div>
-								))}
+									</div>
+								</motion.div>
+							))}
 						</div>
 					</>
 				)}
