@@ -250,9 +250,11 @@ function CampaignForm({setCreateNewCampaign}: { setCreateNewCampaign: (value: bo
         try {
             const response = await campaignsService.createFullCampaign({phoneNumbers: phoneNumbers});
             console.log('respuesta de la creacion de campaigns nueva', response)
-            if (response.status === 'success') {
+            if (response.success === true) {
                 toast.dismiss(loadingToast);
-                toast.success('Mensajes enviados exitosamente');
+                toast.success(response.timer, { 
+                    duration: 10000,
+                });
                 setPhoneNumbers([]);
                 setCreateNewCampaign(false);
                 setIsStartCampaignDialogOpen(false);
@@ -289,8 +291,8 @@ function CampaignForm({setCreateNewCampaign}: { setCreateNewCampaign: (value: bo
 
 		setFilteredPhoneNumbers(filtered);
 	}, [phoneNumbers, searchTerm, statusFilter]);
-	console.log('phoneNumbers', phoneNumbers)
-	return (
+
+    return (
 		<>
 			<motion.div
 				initial={{ opacity: 0, x: 80 }}

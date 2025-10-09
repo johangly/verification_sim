@@ -341,7 +341,6 @@ export const StadisticsPage: React.FC = () => {
 					)}
 				</AnimatePresence>
 
-
 				{/* Header */}
 				{campaigns && (
 					<>
@@ -361,86 +360,26 @@ export const StadisticsPage: React.FC = () => {
 							</motion.div>
 						</div>
 						<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-							{campaigns.map((campaign) => (
-								<motion.div
-									key={campaign.id}
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -20 }}
-									transition={{ duration: 0.3 }}
-									className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
-								>
-									<div className="p-6">
-										<div className="flex justify-between items-start mb-4">
-											<div>
-												<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-													Campaña #{campaign.id}
-												</h3>
-												<p className="text-sm text-gray-500 dark:text-gray-400">
-													{new Date(
-														campaign.createdAt
-													).toLocaleDateString(
-														"es-ES",
-														{
-															year: "numeric",
-															month: "long",
-															day: "numeric",
-															hour: "2-digit",
-															minute: "2-digit",
-														}
-													)}
-												</p>
-											</div>
-											<div
-												className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">
-												{campaign.messages.length}{" "}
-												mensajes
-											</div>
-										</div>
-
-										<div className="space-y-3 mt-4">
-											<div>
-												<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-													Plantilla usada
-												</p>
-												<p className="text-sm text-gray-900 dark:text-white truncate">
-													{campaign.templateUsed ||
-														"Sin plantilla"}
-												</p>
-											</div>
-											{/*<div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</p>
-                  <div className="flex items-center mt-1">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                      campaign.sentAt ? 'bg-green-500' : 'bg-yellow-500'
-                    }`}></span>
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {campaign.sentAt ? 'Enviada' : 'Pendiente de envío'}
-                    </span>
-                  </div>
-                </div> */}
-
-											<div>
-												<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-													Creada por
-												</p>
-												<div className="flex items-center mt-1">
-													<span className="text-sm text-gray-900 dark:text-white">
-														{campaign.createdByUser ===
-															1
-															? "Admin"
-															: "Usuario"}
-													</span>
-												</div>
-											</div>
-											{campaign.sentAt && (
+							{campaigns
+								.slice() // Crea una copia del array
+								.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((campaign) => (
+									<motion.div
+										key={campaign.id}
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										exit={{ opacity: 0, y: -20 }}
+										transition={{ duration: 0.3 }}
+										className="border rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
+									>
+										<div className="p-6">
+											<div className="flex justify-between items-start mb-4">
 												<div>
-													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-														Enviada el
-													</p>
-													<p className="text-sm text-gray-900 dark:text-white">
+													<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+														Campaña #{campaign.id}
+													</h3>
+													<p className="text-sm text-gray-500 dark:text-gray-400">
 														{new Date(
-															campaign.sentAt
+															campaign.createdAt
 														).toLocaleDateString(
 															"es-ES",
 															{
@@ -453,31 +392,93 @@ export const StadisticsPage: React.FC = () => {
 														)}
 													</p>
 												</div>
-											)}
-										</div>
-									</div>
+												<div
+													className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-medium rounded-full">
+													{campaign.messages.length}{" "}
+													mensajes
+												</div>
+											</div>
 
-									<div
-										className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-										<div className="flex justify-between items-center">
-											<span className="text-xs text-gray-500 dark:text-gray-400">
-												ID: {campaign.id}
-											</span>
-											<button
-												onClick={() => {
-													setSelectedCampaign(
-														campaign
-													);
-													setIsModalOpen(true);
-												}}
-												className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-											>
-												Ver detalles
-											</button>
+											<div className="space-y-3 mt-4">
+												<div>
+													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+														Plantilla usada
+													</p>
+													<p className="text-sm text-gray-900 dark:text-white truncate">
+														{campaign.templateUsed ||
+															"Sin plantilla"}
+													</p>
+												</div>
+												{/*<div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Estado</p>
+                  <div className="flex items-center mt-1">
+                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                      campaign.sentAt ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></span>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {campaign.sentAt ? 'Enviada' : 'Pendiente de envío'}
+                    </span>
+                  </div>
+                </div> */}
+
+												<div>
+													<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+														Creada por
+													</p>
+													<div className="flex items-center mt-1">
+														<span className="text-sm text-gray-900 dark:text-white">
+															{campaign.createdByUser ===
+																1
+																? "Admin"
+																: "Usuario"}
+														</span>
+													</div>
+												</div>
+												{campaign.sentAt && (
+													<div>
+														<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+															Enviada el
+														</p>
+														<p className="text-sm text-gray-900 dark:text-white">
+															{new Date(
+																campaign.sentAt
+															).toLocaleDateString(
+																"es-ES",
+																{
+																	year: "numeric",
+																	month: "long",
+																	day: "numeric",
+																	hour: "2-digit",
+																	minute: "2-digit",
+																}
+															)}
+														</p>
+													</div>
+												)}
+											</div>
 										</div>
-									</div>
-								</motion.div>
-							))}
+
+										<div
+											className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+											<div className="flex justify-between items-center">
+												<span className="text-xs text-gray-500 dark:text-gray-400">
+													ID: {campaign.id}
+												</span>
+												<button
+													onClick={() => {
+														setSelectedCampaign(
+															campaign
+														);
+														setIsModalOpen(true);
+													}}
+													className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+												>
+													Ver detalles
+												</button>
+											</div>
+										</div>
+									</motion.div>
+								))}
 						</div>
 					</>
 				)}
