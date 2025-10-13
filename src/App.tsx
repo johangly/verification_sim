@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { StadisticsPage } from './pages/StadisticsPage';
 import CampaignsPage from './pages/CampaignsPage';
 import CampaignsPageSelected from './pages/CampaignsSelectedPage';
+import DetailsCampaignsPage from "./pages/DetailsCampaignsPage.tsx";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/campaigns" element={<CampaignsPage />} />
             <Route path="/campaigns/:id" element={<CampaignsPageSelected />} />
             <Route path="/estadisticas" element={<StadisticsPage />} />
+              <Route path="details-campaign" element={<DetailsCampaignsPage/>} />
           </Routes>
         </Layout>
       </Router>

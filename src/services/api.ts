@@ -1,8 +1,8 @@
 import {
-	PhoneNumber,
-	CreatePhoneNumberRequest,
-	CreatePhoneNumberByFileRequest,
-	UpdatePhoneNumberRequest,
+    PhoneNumber,
+    CreatePhoneNumberRequest,
+    CreatePhoneNumberByFileRequest,
+    UpdatePhoneNumberRequest, PhoneNumberPaginated,
 } from "../types/phoneNumber";
 
 const API_BASE_URL =
@@ -48,13 +48,23 @@ class PhoneNumberService {
 
 		return response.json();
 	}
+    async getAllPhoneNumbersPaginated(
+        page: number,
+        elementsPerPage: number,
+        range?: { start: Date | undefined; end: Date | undefined }
+    ): Promise<{ phoneNumbers: PhoneNumber[]; total: number }> {
+        return this.request<{ phoneNumbers: PhoneNumber[]; total: number }>(
+            `/phonenumbers/paginated?page=${page}&amount=${elementsPerPage}&start=${range?.start?.toISOString()}&end=${range?.end?.toISOString()}`
+        );
+    }
 
 	async getAllPhoneNumbers(
+        page: number,
 		elementsPerPage?: number,
 		range?: { start: Date | undefined; end: Date | undefined }
-	): Promise<PhoneNumber[]> {
-		return this.request<PhoneNumber[]>(
-			`/phonenumbers?amount=${elementsPerPage}&start=${range?.start?.toISOString()}&end=${range?.end?.toISOString()}`
+	): Promise<PhoneNumberPaginated> {
+		return this.request<PhoneNumberPaginated>(
+			`/phonenumbers?amount=${elementsPerPage}&start=${range?.start?.toISOString()}&end=${range?.end?.toISOString()}&page=${page}`
 		);
 	}
 
