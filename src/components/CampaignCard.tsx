@@ -40,9 +40,9 @@ export default function CampaignCard({
 					<span className="font-semibold">Verificados</span>
 					<span className="text-md text-gray-500 dark:text-gray-400">
 						{
-							campaign.messages.filter(
+							campaign?.messages?.filter(
 								(message) =>
-									message.phoneNumber.status ===
+									message?.phoneNumber?.status ===
 									"verificado"
 							).length
 						}/{campaign.messages.length}
@@ -54,7 +54,7 @@ export default function CampaignCard({
 						{
 							campaign.messages.filter(
 								(message) =>
-									message.phoneNumber.status ===
+									message?.phoneNumber?.status ===
 									"por verificar"
 							).length
 						}/{campaign.messages.length}

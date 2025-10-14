@@ -47,9 +47,9 @@ export default function CampaignsDetailsSelected() {
 	useEffect(() => {
 		if (!selectedCampaign) return;
 		if (buttonSelected === "enviados")
-			return setPhonesByStatus(selectedCampaign.messages);
-		const dataFiltered = selectedCampaign.messages.filter(
-			(msg) => msg.phoneNumber.status === buttonSelected
+			return setPhonesByStatus(selectedCampaign?.messages);
+		const dataFiltered = selectedCampaign?.messages.filter(
+			(msg) => msg?.phoneNumber?.status === buttonSelected
 		);
 		setPhonesByStatus(dataFiltered);
 	}, [buttonSelected, selectedCampaign]);
@@ -161,8 +161,8 @@ export default function CampaignsDetailsSelected() {
 												? selectedCampaign.messages.filter(
 													(msg) =>
 														msg
-															.phoneNumber
-															.status ===
+															?.phoneNumber
+                                                            ?.status ===
 														"verificado"
 												).length
 												: btn.value ===
@@ -170,15 +170,15 @@ export default function CampaignsDetailsSelected() {
 													? selectedCampaign.messages.filter(
 														(msg) =>
 															msg
-																.phoneNumber
-																.status ===
+																?.phoneNumber
+																?.status ===
 															"por verificar"
 													).length
 													: selectedCampaign.messages.filter(
 														(msg) =>
 															msg
-																.phoneNumber
-																.status ===
+																?.phoneNumber
+																?.status ===
 															"no verificado"
 													).length}
 									</p>{" "}

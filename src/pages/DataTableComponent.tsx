@@ -27,19 +27,19 @@ interface DataTableComponentProps<T extends Record<string, unknown>> {
 }
 
 export default function DataTableComponent<T extends Record<string, unknown>>({
-                                                  headers,
-                                                  data,
-                                                  footer,
-                                                  rowClassName,
-                                                  setPage,
-                                                  currentPage,
-                                                  setRowsPerPage,
-                                                  rowsPerPage,
-                                                  rowsPerPageOptions,
-                                                  showRowsPerPageOptions = false,
-                                                  totalPages,
-                                                  showPagination = false,
-                                              }: DataTableComponentProps<T>) {
+                                                                                  headers,
+                                                                                  data,
+                                                                                  footer,
+                                                                                  rowClassName,
+                                                                                  setPage,
+                                                                                  currentPage,
+                                                                                  setRowsPerPage,
+                                                                                  rowsPerPage,
+                                                                                  rowsPerPageOptions,
+                                                                                  showRowsPerPageOptions = false,
+                                                                                  totalPages,
+                                                                                  showPagination = false,
+                                                                              }: DataTableComponentProps<T>) {
     const [sortConfig, setSortConfig] = useState<{
         key: keyof T | null;
         direction: "asc" | "desc";
@@ -66,6 +66,11 @@ export default function DataTableComponent<T extends Record<string, unknown>>({
         });
     })();
 
+    const pagesArray: number[] = Array.from({length: totalPages}, (_, i) => i);
+    const maxButtons = 15;
+    const startPage = Math.max(0, Math.min(currentPage - Math.floor(maxButtons / 2), totalPages - maxButtons));
+    const endPage = Math.min(totalPages, startPage + maxButtons);
+    const visiblePages = pagesArray.slice(startPage, endPage);
     const handleSort = (key: keyof T) => {
         setSortConfig((prev) => {
             if (prev.key === key) {
@@ -84,31 +89,31 @@ export default function DataTableComponent<T extends Record<string, unknown>>({
                 <tr>
                     {
                         headers.length === 0 ? (
-                            <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 tracking-wide">
-                                No headers defined.
-                            </th>
-                        ) :
-                        headers.map((header, index) => (
-                        <th
-                            key={index}
-                            onClick={() => header.sortable && handleSort(header.key)}
-                            className={`px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 tracking-wide cursor-${
-                                header.sortable ? "pointer" : "default"
-                            } select-none`}
-                        >
-                            <div className="flex items-center">
-                                {header.icon && (
-                                    <header.icon className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400"/>
-                                )}
-                                <span>{header.title}</span>
-                                {sortConfig.key === header.key && (
-                                    <span className="ml-2 text-xs text-gray-500">
+                                <th className="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 tracking-wide">
+                                    No headers defined.
+                                </th>
+                            ) :
+                            headers.map((header, index) => (
+                                <th
+                                    key={index}
+                                    onClick={() => header.sortable && handleSort(header.key)}
+                                    className={`px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-200 tracking-wide cursor-${
+                                        header.sortable ? "pointer" : "default"
+                                    } select-none`}
+                                >
+                                    <div className="flex items-center">
+                                        {header.icon && (
+                                            <header.icon className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400"/>
+                                        )}
+                                        <span>{header.title}</span>
+                                        {sortConfig.key === header.key && (
+                                            <span className="ml-2 text-xs text-gray-500">
                       {sortConfig.direction === "asc" ? "▲" : "▼"}
                     </span>
-                                )}
-                            </div>
-                        </th>
-                    ))}
+                                        )}
+                                    </div>
+                                </th>
+                            ))}
                 </tr>
 
                 </thead>
@@ -123,42 +128,44 @@ export default function DataTableComponent<T extends Record<string, unknown>>({
                                 No data available.
                             </td>
                         </tr>
-                    ):
+                    ) :
                     sortedData.map((row, rowIndex) => (
-                    <tr
-                        key={rowIndex}
-                        className={
-                            typeof rowClassName === "function"
-                                ? rowClassName(row, rowIndex)
-                                : rowClassName || ""
-                        }
-                    >
-                        {headers.map((header, colIndex) => {
-                            const value = row[header.key];
-                            const cellClass =
-                                typeof header.cellClassName === "function"
-                                    ? header.cellClassName(value, row)
-                                    : header.cellClassName || "";
+                        <tr
+                            key={rowIndex}
+                            className={
+                                typeof rowClassName === "function"
+                                    ? rowClassName(row, rowIndex)
+                                    : rowClassName || ""
+                            }
+                        >
+                            {headers.map((header, colIndex) => {
+                                const value = row[header.key];
+                                const cellClass =
+                                    typeof header.cellClassName === "function"
+                                        ? header.cellClassName(value, row)
+                                        : header.cellClassName || "";
 
-                            return (
-                                <td
-                                    key={colIndex}
-                                    className={`px-6 py-4 border-b border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-100 ${cellClass}`}
-                                >
-                                    {header.render ? header.render(value, row) : String(value)}
-                                </td>
-                            );
-                        })}
-                    </tr>
-                ))}
+                                return (
+                                    <td
+                                        key={colIndex}
+                                        className={`px-6 py-4 border-b border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-100 ${cellClass}`}
+                                    >
+                                        {header.render ? header.render(value, row) : String(value)}
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
                 </tbody>
 
                 {footer && (
                     <tfoot>
+
                     {
                         showPagination && (
 
                             <tr>
+
                                 <td className='w-[50%]'>
                                     <div className="px-6 py-4 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
                                         Page {currentPage} of {totalPages}
@@ -188,6 +195,26 @@ export default function DataTableComponent<T extends Record<string, unknown>>({
                             </tr>
                         )
                     }
+                    <tr>
+                        <td colSpan={headers.length}>
+                            <div className="flex justify-center space-x-2 my-4">
+                                {visiblePages.map((pageNumber) => (
+                                    <button
+                                        key={pageNumber}
+                                        className={`px-3 py-1 rounded transition-colors duration-200
+            ${currentPage === pageNumber + 1
+                                            ? 'bg-blue-700 text-white cursor-not-allowed opacity-70'
+                                            : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                                        onClick={() => setPage && setPage(pageNumber + 1)}
+                                        disabled={currentPage === pageNumber + 1}
+                                    >
+                                        {pageNumber + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </td>
+                    </tr>
+
                     <tr className='w-full'>
                         <td
                             colSpan={headers.length}
@@ -213,7 +240,9 @@ export default function DataTableComponent<T extends Record<string, unknown>>({
                                 )
                             }
                         </td>
+
                     </tr>
+
                     </tfoot>
                 )}
             </table>

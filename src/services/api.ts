@@ -6,7 +6,7 @@ import {
 } from "../types/phoneNumber";
 
 const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+	import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_PRODUCTION_URL ||  "http://localhost:3001";
 
 class PhoneNumberService {
 	private async request<T>(
