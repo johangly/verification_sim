@@ -163,7 +163,7 @@ export default function useStadistics() {
                             acc +
                             c.messages.filter(
                                 (m) =>
-                                    m.phoneNumber.status ===
+                                    m?.phoneNumber?.status ===
                                     "verificado"
                             ).length,
                         0
@@ -183,7 +183,7 @@ export default function useStadistics() {
                             acc +
                             c.messages.filter(
                                 (m) =>
-                                    m.phoneNumber.status !==
+                                    m?.phoneNumber?.status !==
                                     "verificado"
                             ).length,
                         0
