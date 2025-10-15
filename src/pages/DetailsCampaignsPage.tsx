@@ -30,7 +30,7 @@ export default function DetailsCampaignsPage() {
     return (
         <div>
             {campaigns && (
-                <>
+                <div className="max-w-4xl w-full space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -167,7 +167,7 @@ export default function DetailsCampaignsPage() {
                                 </motion.div>
                             ))}
                     </div>
-                </>
+                </div>
             )}
 
             {/* Modal de Detalles de Campaña */}
