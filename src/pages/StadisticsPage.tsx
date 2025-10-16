@@ -1,5 +1,5 @@
 import React from "react";
-import {motion, AnimatePresence} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 // import {
 //     X,
 //     Check,
@@ -15,10 +15,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../components/ui/select";
-import {twMerge} from "tailwind-merge";
+import { twMerge } from "tailwind-merge";
 import StadisticsPieComponent from "../components/StadisticsPieComponent.tsx";
 import useStadistics from "../hooks/useStadistics.tsx";
 import StadisticsAreaChartComponent from "../components/StadisticsAreaChartComponent.tsx";
+import { campaignsService } from "../services/campaignsService.ts";
 
 // const messagesStatus = {
 //     sent: {
@@ -70,10 +71,10 @@ export const StadisticsPage: React.FC = () => {
             <div className="max-w-7xl w-full space-y-6">
                 <div>
                     <motion.div
-                        initial={{opacity: 0, y: 20}}
-                        animate={{opacity: 1, y: 0}}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                     >
-                        <div className="flex justify-start items-start gap-8">
+                        <div className="flex justify-start items-center gap-8">
                             <div className="flex flex-col w-full max-w-[250px]">
                                 <p className="font-semibold mb-2">
                                     Seleccionar Campaña
@@ -93,7 +94,7 @@ export const StadisticsPage: React.FC = () => {
                                         }}
                                         className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <SelectValue placeholder="Selecciona una región"/>
+                                        <SelectValue placeholder="Selecciona una región" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white dark:bg-gray-700">
                                         {allCampaigns.map((campaign) => (
@@ -112,6 +113,7 @@ export const StadisticsPage: React.FC = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <div className="w-fit">
                                 <h2 className="text-blue-600 font-bold">
                                     ULTIMA CAMPAÑA:
@@ -120,23 +122,41 @@ export const StadisticsPage: React.FC = () => {
                                     {allCampaigns.length > 0
                                         ? `${new Date(
                                             allCampaigns[
-                                            allCampaigns.length -
-                                            1
-                                                ].createdAt
+                                                allCampaigns.length -
+                                                1
+                                            ].createdAt
                                         ).toLocaleDateString()}`
                                         : "No hay campañas disponibles"}
                                 </p>
                             </div>
+                            <button
+                                onClick={() => {
+                                    if (campaignSelectedToSeeStatistics) {
+                                        campaignsService.exportCampaign(campaignSelectedToSeeStatistics)
+                                            .catch(error => {
+                                                console.error('Error al exportar la campaña:', error);
+                                                // Aquí podrías mostrar un toast o alerta de error
+                                                alert('Error al exportar la campaña: ' + error.message);
+                                            });
+                                    } else {
+                                        alert('Por favor selecciona una campaña para exportar');
+                                    }
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 ml-4"
+                                disabled={!campaignSelectedToSeeStatistics}
+                            >
+                                Exportar a CSV
+                            </button>
                         </div>
                         <div
                             className="w-full grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6 my-6 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                             {selectFields.map((field, idx) => (
                                 <motion.div
                                     key={field.label}
-                                    initial={{opacity: 0, y: 20}}
-                                    animate={{opacity: 1, y: 0}}
-                                    exit={{opacity: 0, y: -20}}
-                                    transition={{duration: 0.2, delay: 0.1 * (idx + 1)}}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, delay: 0.1 * (idx + 1) }}
                                     className="flex flex-col justify-center items-start space-y-2 w-full"
                                 >
                                     <label className="text-sm font-medium text-gray-900 dark:text-white opacity-70">
@@ -144,10 +164,10 @@ export const StadisticsPage: React.FC = () => {
                                     </label>
                                     <Select value={field.value} onValueChange={field.setValue}>
                                         <SelectTrigger
-                                            style={{padding: ".5rem 1rem", minHeight: "42px"}}
+                                            style={{ padding: ".5rem 1rem", minHeight: "42px" }}
                                             className="w-full xl:max-w-[250px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-[1rem] font-inherit text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
-                                            <SelectValue placeholder={field.placeholder}/>
+                                            <SelectValue placeholder={field.placeholder} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white dark:bg-gray-700">
                                             {field.options.map((option) => (
@@ -172,14 +192,14 @@ export const StadisticsPage: React.FC = () => {
                                 && campaignMessagesStadistics.messageStats
                                 && campaignMessagesStadistics.messageStats.map((stat, index) => (
                                     <motion.div
-                                        initial={{opacity: 0, x: 80}}
-                                        animate={{opacity: 1, x: 0}}
+                                        initial={{ opacity: 0, x: 80 }}
+                                        animate={{ opacity: 1, x: 0 }}
                                         key={stat.label}
-                                        exit={{opacity: 0, x: -80}}
-                                        transition={{duration: 0.2, delay: index * 0.2, ease: 'easeIn', stiffness: 100}}
+                                        exit={{ opacity: 0, x: -80 }}
+                                        transition={{ duration: 0.2, delay: index * 0.2, ease: 'easeIn', stiffness: 100 }}
                                         className={twMerge(`
 												relative flex flex-col items-center p-4 rounded-lg border 
-												transition-all duration-200 hover:shadow-md`,
+												transition-all duration-200 hover:shadow-md shadow-sm`,
                                             stat.isTotal ? 'justify-center border-blue-200 bg-blue-600/50 dark:bg-blue-900 dark:bg-opacity-10 dark:border-blue-800' : `${stat.color.replace('text', 'border')} bg-white dark:bg-gray-800`)}
                                     >
                                         {stat.isTotal ? (
@@ -188,19 +208,19 @@ export const StadisticsPage: React.FC = () => {
                                                 <div
                                                     className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
                                                     <svg className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round"
-                                                              strokeWidth={2}
-                                                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                            strokeWidth={2}
+                                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
                                                 <span
                                                     className="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">
-													{stat.value}
-												</span>
+                                                    {stat.value}
+                                                </span>
                                                 <span className="text-sm text-center text-blue-600 dark:text-blue-400">
-													{stat.label}
-												</span>
+                                                    {stat.label}
+                                                </span>
                                             </>
                                         ) : (
                                             // Contenido de las tarjetas normales
@@ -209,22 +229,22 @@ export const StadisticsPage: React.FC = () => {
                                                     {stat.icon}
                                                 </div>
                                                 <span className={`text-2xl font-bold text-center ${stat.color}`}>
-													{stat.value}
-												</span>
+                                                    {stat.value}
+                                                </span>
                                                 <span
                                                     className="text-sm text-center text-gray-600 dark:text-gray-300 mb-1">
-													{stat.label}
-												</span>
+                                                    {stat.label}
+                                                </span>
                                                 <div
                                                     className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-2">
                                                     <div
                                                         className={`h-1.5 rounded-full ${stat.color.replace('text', 'bg')}`}
-                                                        style={{width: `${stat.percentage}%`}}
+                                                        style={{ width: `${stat.percentage}%` }}
                                                     ></div>
                                                 </div>
                                                 <span className="text-xs text-center text-gray-500 mt-1">
-													{stat.percentage}%
-												</span>
+                                                    {stat.percentage}%
+                                                </span>
                                             </>
                                         )}
 
@@ -235,10 +255,10 @@ export const StadisticsPage: React.FC = () => {
                                                     <button
                                                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor"
-                                                             viewBox="0 0 24 24">
+                                                            viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round"
-                                                                  strokeWidth={2}
-                                                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                strokeWidth={2}
+                                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
                                                     </button>
                                                     <div
@@ -274,10 +294,10 @@ export const StadisticsPage: React.FC = () => {
                                         <StadisticsPieComponent title={
                                             `Estadisticas de la campaña #${campaignSelectedToSeeStatistics}`
                                         } subtitle={'Respuestas a los mensajes'} data={dataToShowInGraphMessage}
-                                                                labelPassed={'Si'} footerText={'SI / NO'}
-                                                                subFooterText={
-                                                                    'Detalle de respuestas a los mensajes'
-                                                                }/>
+                                            labelPassed={'Si'} footerText={'SI / NO'}
+                                            subFooterText={
+                                                'Detalle de respuestas a los mensajes'
+                                            } />
                                     </div>
                                 </div>
                                 {/* <DetailsStates dataToShowInGraphStatus={dataToShowInGraphStatus} COLORS={COLORS} /> */}
@@ -294,13 +314,13 @@ export const StadisticsPage: React.FC = () => {
                 <AnimatePresence mode="wait">
                     {isLoading ? (
                         <motion.div
-                            initial={{opacity: 0}}
-                            animate={{opacity: 1}}
-                            exit={{opacity: 0}}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             className="flex justify-center items-center py-12"
                         >
                             <motion.div
-                                animate={{rotate: 360}}
+                                animate={{ rotate: 360 }}
                                 transition={{
                                     duration: 1,
                                     repeat: Infinity,
@@ -317,8 +337,8 @@ export const StadisticsPage: React.FC = () => {
                                     className="w-fit min-w-[403.46px] flex flex-col justify-beetwen flex-wrap h-full space-y-9.5">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <motion.div
-                                            initial={{opacity: 0, y: 20}}
-                                            animate={{opacity: 1, y: 0}}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
                                         >
                                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                                 Estadisticas de los ultimos 30 dias
@@ -329,9 +349,9 @@ export const StadisticsPage: React.FC = () => {
                                         </motion.div>
                                     </div>
                                     <motion.div
-                                        initial={{opacity: 0, y: 20}}
-                                        animate={{opacity: 1, y: 0}}
-                                        exit={{opacity: 0, y: -20}}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
                                     >
                                         {StatisticsCard}
                                     </motion.div>
@@ -341,7 +361,7 @@ export const StadisticsPage: React.FC = () => {
                                     description={'Datos sobre telefonos verificados y no verificados en rango de tiempo'}
                                     labelPassed={'verificado'}
                                     data={dataToShowInGraphAreaMemo}
-                                    colors={{verificado: "#22c55e", noVerificado: "#ef4444"}}
+                                    colors={{ verificado: "#22c55e", noVerificado: "#ef4444" }}
                                 />
                             </div>
                         )
