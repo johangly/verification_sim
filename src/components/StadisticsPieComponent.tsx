@@ -41,7 +41,7 @@ export default function StadisticsPieComponent({title,subtitle,data,labelPassed,
         )
     } satisfies ChartConfig;
     return (
-        <Card className="flex flex-col bg-gray-800">
+        <Card className="flex flex-col bg-white dark:bg-gray-800">
             <CardHeader className="items-center pb-0">
                 <CardTitle>{title}</CardTitle>
                 <CardDescription>{subtitle}</CardDescription>
