@@ -373,7 +373,7 @@ export default function useStadistics() {
     const StatisticsCard = useMemo(
         () => (
             <Card
-                className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] dark:border-gray-700">
+                className="flex flex-col bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 max-w-[400px] min-h-[510px] dark:border-gray-700">
                 <CardHeader className="flex items-center justify-between pb-0">
                     <div className="flex flex-col">
                         <CardTitle>Estado de clientes</CardTitle>
@@ -528,6 +528,7 @@ export default function useStadistics() {
         return statisticsService
             .getGeneralStatistics(type)
             .then((data: TypeStatistics) => {
+                console.log('data',data);
                 setGeneralStatistics(data);
                 return data; // Asegúrate de devolver los datos
             })
