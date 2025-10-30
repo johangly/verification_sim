@@ -9,11 +9,7 @@ import {
   X,
 } from "lucide-react";
 import useStadistics from "../hooks/useStadistics.tsx";
-import type {
-  CampaignType,
-  CampaignMessagesStadistics,
-  MessageStadistics,
-} from "../types/campaigns";
+import type { CampaignType } from "../types/campaigns";
 
 import {
   Tooltip,

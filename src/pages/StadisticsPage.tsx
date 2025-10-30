@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, CheckCheck, CircleX, MailCheck } from "lucide-react";
+// import { X, Check, CheckCheck, CircleX, MailCheck } from "lucide-react";
 
 import {
   Select,
@@ -13,44 +13,45 @@ import { twMerge } from "tailwind-merge";
 import StadisticsPieComponent from "../components/StadisticsPieComponent.tsx";
 import useStadistics from "../hooks/useStadistics.tsx";
 import StadisticsAreaChartComponent from "../components/StadisticsAreaChartComponent.tsx";
+// import { campaignsService } from "../services/campaignsService.ts";
 
-const messagesStatus = {
-  sent: {
-    label: "Enviado",
-    Icon: <Check className="w-4 h-4" />,
-  },
-  delivered: {
-    label: "Entregado",
-    Icon: <CheckCheck className="w-4 h-4" />,
-  },
-  undelivered: {
-    label: "No Entregado",
-    Icon: <CircleX className="w-4 h-4" />,
-  },
-  read: {
-    label: "Leído",
-    Icon: <MailCheck className="w-4 h-4" />,
-  },
-  failed: {
-    label: "Fallido",
-    Icon: <X className="w-4 h-4" />,
-  },
-};
-const COLORS = ["#0088FE", "#ce1212", "#FFBB28", "#FF8042"];
+// const messagesStatus = {
+//   sent: {
+//     label: "Enviado",
+//     Icon: <Check className="w-4 h-4" />,
+//   },
+//   delivered: {
+//     label: "Entregado",
+//     Icon: <CheckCheck className="w-4 h-4" />,
+//   },
+//   undelivered: {
+//     label: "No Entregado",
+//     Icon: <CircleX className="w-4 h-4" />,
+//   },
+//   read: {
+//     label: "Leído",
+//     Icon: <MailCheck className="w-4 h-4" />,
+//   },
+//   failed: {
+//     label: "Fallido",
+//     Icon: <X className="w-4 h-4" />,
+//   },
+// };
+// const COLORS = ["#0088FE", "#ce1212", "#FFBB28", "#FF8042"];
 
 export const StadisticsPage: React.FC = () => {
   const {
-    selectedCampaign,
+    // selectedCampaign,
     selectFields,
     generalStatistics,
     isLoading,
-    totalDeClientes,
-    setSelectedCampaign,
-    campaigns,
+    // totalDeClientes,
+    // setSelectedCampaign,
+    // campaigns,
     dataToShowInGraphStatus,
     dataToShowInGraphMessage,
-    setIsModalOpen,
-    isModalOpen,
+    // setIsModalOpen,
+    // isModalOpen,
     campaignSelectedToSeeStatistics,
     setCampaignSelectedToSeeStatistics,
     StatisticsCard,

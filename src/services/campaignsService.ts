@@ -49,6 +49,42 @@ export class CampaignsService {
     });
   }
 
+  
+  async exportCampaign(id: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/campaigns/export?campaignId=${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorData.message || response.statusText}`
+      );
+    }
+
+    // Obtener el nombre del archivo del header Content-Disposition
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = contentDisposition
+      ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+      : `campaign-${id}-${new Date().toISOString()}.csv`;
+
+    // Crear un enlace temporal para la descarga
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Limpiar
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
+
   async createFullCampaign(data:{phoneNumbers:PhoneNumber[]}): Promise<any> {
     return this.request<PhoneNumber[]>('/campaigns/create-full-campaign', {
       method: 'POST',

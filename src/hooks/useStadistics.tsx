@@ -191,7 +191,7 @@ export default function useStadistics() {
                 color: "var(--estado-noVerificado)"
             },
         ];
-
+        
         const dataGraphByCampaignMessage = [
             {
                 name: "Si",
@@ -223,11 +223,30 @@ export default function useStadistics() {
                         (acc, c) =>
                             acc +
                             c.messages.filter(
-                                (m) => m.responseReceived !== "Si"
+                                (m) => m.responseReceived === "No"
                             ).length,
                         0
                     ),
                 color: "var(--estado-noVerificado)"
+
+            },
+            {
+                name: "Sin respuesta",
+                value: allCampaigns
+                    .filter(
+                        (c) =>
+                            c.id ===
+                            Number(campaignSelectedToSeeStatistics)
+                    )
+                    .reduce(
+                        (acc, c) =>
+                            acc +
+                            c.messages.filter(
+                                (m) => m.responseReceived === null || m.responseReceived === ""
+                            ).length,
+                        0
+                    ),
+                color: "var(--estado-sinRespuesta)"
 
             },
         ];

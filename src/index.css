@@ -164,6 +164,7 @@
     --estado-verificado: var(--color-green-600);
     --estado-noVerificado: var(--color-red-600);
     --estado-porVerificar: var(--color-yellow-600);
+    --estado-sinRespuesta: var(--color-gray-500);
     --chart-1: var(--color-green-800);
     --chart-2: var(--color-red-800);
     --chart-3: var(--color-yellow-800);
