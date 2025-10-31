@@ -1,6 +1,6 @@
 import React, {useState, useMemo} from 'react';
 import {motion} from 'framer-motion';
-import {Moon, Sun, Users, GalleryVerticalEnd, BookMarked, PieChart, User2} from 'lucide-react';
+import {Moon, Sun, Users, GalleryVerticalEnd,CardSim, BookMarked, PieChart, User2, UserStar as IconConcetrated,Group} from 'lucide-react';
 import {useTheme} from '../contexts/ThemeContext';
 import {Toaster} from 'react-hot-toast';
 import type {MenuItem} from '../types';
@@ -62,7 +62,26 @@ export const Layout: React.FC<LayoutProps> = ({children}) => {
                     icon: BookMarked,
                     path: '/details-campaign',
 
+                },
+                {
+                    id:'concentrated',
+                    label:'Concentrado',
+                    icon: IconConcetrated,
+                    path: '/concentrated',
+                },
+                {
+                    id:'group',
+                    label:'Grupos',
+                    icon: Group,
+                    path: '/groups',
+                },
+                {
+                    id:'promoter',
+                    label:'Promotores',
+                    icon: CardSim,
+                    path: '/promoters',
                 }
+
                 // {
                 //   id: 'settings',
                 //   label: 'Configuración',
