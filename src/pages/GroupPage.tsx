@@ -1,10 +1,25 @@
 import { motion } from 'framer-motion'
 import { Plus, Search } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
+import useGroup from '../hooks/useGroup'
 export default function GroupPage() {
-  return (
-    <div className={twMerge("w-full flex justify-center items-start gap-5")}>
-            
+    const {
+        group,
+        setGroup,
+        allConcentrated,
+        createGroup,
+        showModal,
+        setShowModal,
+        fetchAllGroups,
+        allGroups,
+        fetchGroupById,
+        updateGroup,
+        idUpdating,
+        setIdUpdating
+    } = useGroup()
+    return (
+        <div className={twMerge("w-full flex justify-center items-start gap-5")}>
+
             <div className='max-w-5xl w-full space-y-6'>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <motion.div
@@ -23,6 +38,7 @@ export default function GroupPage() {
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <button className="bg-blue-600 text-white px-4 py-2 rounded-md flex gap-2 items-center"
+                            onClick={() => setShowModal(true)}
                         ><Plus className="w-4 h-4" />Agregar Grupo</button>
                     </motion.div>
                 </div>
@@ -45,8 +61,8 @@ export default function GroupPage() {
                         </div>
                     </div>
                 </motion.div>
-                </div>
+            </div>
         </div>
-              
-  )
+
+    )
 }
