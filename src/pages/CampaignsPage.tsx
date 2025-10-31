@@ -450,7 +450,7 @@ function CampaignForm({
 
     setSocket(newSocket);
     return () => {
-      newSocket.disconnect(); // ✅ Solo ejecuta, no retornes
+      newSocket.disconnect();
     };
   }, []);
   return (
