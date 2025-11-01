@@ -1,19 +1,21 @@
 import React, {useState, useMemo} from 'react';
 import {motion} from 'framer-motion';
-import {Moon, Sun, Users, GalleryVerticalEnd,CardSim, BookMarked, PieChart, User2, UserStar as IconConcetrated,Group} from 'lucide-react';
+import {Moon, Sun, Users, GalleryVerticalEnd,CardSim, BookMarked, PieChart, User2, UserStar as IconConcetrated,Group, Lock} from 'lucide-react';
 import {useTheme} from '../contexts/ThemeContext';
 import {Toaster} from 'react-hot-toast';
 import type {MenuItem} from '../types';
 import Sidebar from './Sidebar';
+import { Outlet } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
     children: React.ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({children}) => {
+export const Layout = () => {
     const {isDark, toggleTheme} = useTheme();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+    const { user } = useAuth();
     const menuItems: MenuItem[] = useMemo(() => {
         const baseItems: MenuItem[] = [];
 
@@ -80,7 +82,14 @@ export const Layout: React.FC<LayoutProps> = ({children}) => {
                     label:'Promotores',
                     icon: CardSim,
                     path: '/promoters',
+                },
+                {
+                    id: 'Usuarios',
+                    label: 'Usuarios',
+                    icon: User2,
+                    path: '/users',
                 }
+
 
                 // {
                 //   id: 'settings',
@@ -116,7 +125,7 @@ export const Layout: React.FC<LayoutProps> = ({children}) => {
                 onToggle={handleSidebarToggle}
                 menuItems={menuItems}
                 isDark={isDark}
-                user={{nombre: "Admin", grupo: {nombre_grupo: "Administrador"}}} // Pasar el usuario actual al Sidebar
+                user={user} // Pasar el usuario actual al Sidebar
             />
             <div className="flex flex-col w-full">
                 <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -152,7 +161,7 @@ export const Layout: React.FC<LayoutProps> = ({children}) => {
                     </div>
                 </header>
                 <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-y-auto w-full">
-                    {children}
+                    <Outlet />
                 </main>
             </div>
             <Toaster position="bottom-right" toastOptions={{

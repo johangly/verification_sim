@@ -1,12 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import type { SidebarProps } from '../types/index';
 import { twMerge } from 'tailwind-merge';
+import { LoginGetResponse } from '../types/auth';
+import { useAuth } from '../hooks/useAuth';
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, menuItems, user }) => {
-
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, menuItems, user }:{
+  isCollapsed: boolean;
+  onToggle: () => void;
+  menuItems: {
+    id: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    path: string;
+    badge?: number;
+  }[];
+  user: LoginGetResponse['user'];
+}) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const { logout } = useAuth();
   return (
     <motion.aside
       initial={false}
@@ -153,23 +167,43 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, menuItems, use
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <button className="p-4 border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
         <AnimatePresence mode="wait">
           {!isCollapsed ? (
-            <motion.div
+            <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center space-x-3"
+              className="flex items-center space-x-3 "
+              onClick={() => setShowTooltip(!showTooltip)}
             >
-              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">AD</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.nombre}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{user.grupo?.nombre_grupo ? user.grupo?.nombre_grupo : ''}</p>
-              </div>
-            </motion.div>
+              {showTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="absolute left-full ml-2 px-3 py-2 w-[200px] bg-gray-700 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50"
+                >
+                  <button onClick={() => {
+                    logout();
+                    setShowTooltip(false);
+                  }}
+                  className="flex items-center hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-800 px-2 py-2 rounded-md text-black w-full"
+                  >
+                    <LogOut className="w-4 h-4 inline-block mr-1 text-red-500"/>
+                    Cerrar sesión</button>
+                </motion.div>
+              )}
+              <button className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">{user.name.slice(0, 2).toUpperCase()}</span>
+              </button>
+              <button className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{
+                    user.email.slice(0, 20)
+                  }</p>
+              </button>
+            </motion.button>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
@@ -177,12 +211,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, menuItems, use
               className="flex justify-center"
             >
               <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">{user.nombre[0] + user.nombre[1]}</span>
+                  <span className="text-white font-semibold text-sm">{
+                    user.name.slice(0, 2).toUpperCase()
+                    }</span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </button>
     </motion.aside>
   );
 };

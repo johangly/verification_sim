@@ -1,3 +1,5 @@
+import { LoginGetResponse } from "./auth";
+
 export interface MenuItem {
     id: string;
     label: string;
@@ -11,7 +13,7 @@ export interface MenuItem {
     onToggle: () => void;
     isDark: boolean;
     menuItems: MenuItem[];
-    user: User;
+    user: LoginGetResponse['user'];
   }
 
   export interface User {
