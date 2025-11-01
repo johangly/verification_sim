@@ -8,6 +8,7 @@ import CampaignsPageSelected from './pages/CampaignsSelectedPage';
 import DetailsCampaignsPage from "./pages/DetailsCampaignsPage.tsx";
 import ConcentratedPage from './pages/ConcentratedPage.tsx';
 import GroupPage from './pages/GroupPage.tsx';
+import PromotersPage from './pages/PromotersPage.tsx';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/estadisticas" element={<StadisticsPage />} />
             <Route path="/concentrated" element={<ConcentratedPage />} />
             <Route path='/groups' element={<GroupPage/>} />
+            <Route path='/promoters' element={<PromotersPage/>} />
               <Route path="details-campaign" element={<DetailsCampaignsPage/>} />
           </Routes>
         </Layout>

@@ -9,7 +9,7 @@ import {
 interface DataTableHeader<T> {
   icon: ElementType;
   title: string;
-  key: keyof T;
+  key: keyof T | "actions";
   render?: (value: T[keyof T], row: T) => ReactNode;
   cellClassName?: string | ((value: T[keyof T], row: T) => string);
   sortable?: boolean | ((a: T, b: T) => number);

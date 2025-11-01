@@ -81,7 +81,9 @@ export default function ConcentratedForm({
                     className="w-5 h-5"
                     id="new-concentrated-status"
                     checked={input.checked}
-                    onCheckedChange={(checked) => input.onChange(checked)}
+                    onCheckedChange={(checked) =>
+                      (input.onChange as (checked: boolean) => void)(checked === true)
+                    }
                   />
                   <label
                     htmlFor="new-concentrated-status"

@@ -1,3 +1,5 @@
+import { ConcentratedDataGet } from "./concentrated"
+
 export interface GroupDataPost {
     name: string
     description: string
@@ -9,6 +11,7 @@ export interface GroupDataGet extends GroupDataPost {
     code: string
     createdAt: string
     updatedAt: string
+    concentrado:ConcentratedDataGet
 }
 export interface GroupDataPut{
     id: number

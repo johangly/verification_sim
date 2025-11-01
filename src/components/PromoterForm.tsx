@@ -1,36 +1,37 @@
-import React from 'react'
-import { GroupDataPost } from '../types/groups';
+import { Dispatch, SetStateAction } from 'react'
+import { PromoterDataPost } from '../types/promoter';
 import { twMerge } from 'tailwind-merge';
-import { ConcentratedDataGet } from '../types/concentrated';
-import { Info, User, UserStar as IconConcetrated } from 'lucide-react';
 import { Checkbox } from "./ui/checkbox";
-interface GroupPageProps {
-    group: GroupDataPost;
-    setGroup: React.Dispatch<React.SetStateAction<GroupDataPost>>;
+import { Info, User, Group} from 'lucide-react';
+import { GroupDataGet } from '../types/groups';
+
+interface PromoterFormProps {
+    promoter: PromoterDataPost;
+    setPromoter: Dispatch<SetStateAction<PromoterDataPost>>;
     idUpdating: number | null;
-    concentratedList: ConcentratedDataGet[]
-    createGroup: () => Promise<void>;
-    updateGroup: () => Promise<void>;
+    CreatePromoter: () => Promise<void>;
+    UpdatePromoter: () => Promise<void>;
+    groupList: GroupDataGet[]
 }
 
-export default function GroupForm({
-    group,
-    setGroup,
+export default function PromoterForm({
+    promoter,
+    setPromoter,
     idUpdating,
-    createGroup,
-    updateGroup,
-    concentratedList
-}: GroupPageProps) {
+    CreatePromoter,
+    UpdatePromoter
+    , groupList
+}: PromoterFormProps) {
     const inputs = [
-        { label: 'Nombre', placeholder: 'Ingrese el nombre del grupo', type: 'text', value: group.name, onChange: (e) => setGroup({ ...group, name: e.target.value }) },
-        { label: 'Concentrado', type: 'select', value: group.concentratedId, onChange: (e) => setGroup({ ...group, concentratedId: Number(e.target.value) }) },
-        { label: 'Descripción', placeholder: 'Ingrese la descripción del grupo', type: 'text', value: group.description, onChange: (e) => setGroup({ ...group, description: e.target.value }) },
+        { label: 'Nombre', placeholder: 'Ingrese el nombre del promotor', type: 'text', value: promoter.name, onChange: (e) => setPromoter({ ...promoter, name: e.target.value }) },
+        { label: 'Grupo', type: 'select', value: promoter.groupId, onChange: (e) => setPromoter({ ...promoter, groupId: Number(e.target.value) }) },
+        { label: 'Email', placeholder: 'Ingrese el email del promotor', type: 'text', value: promoter.email, onChange: (e) => setPromoter({ ...promoter, email: e.target.value }) },
         {
             label: "Estado",
             type: "checkbox",
-            checked: group.isActive,
+            checked: promoter.isActive,
             onChange: (checked: boolean) =>
-                setGroup({ ...group, isActive: checked }),
+                setPromoter({ ...promoter, isActive: checked }),
         }]
     return (
         <div className={twMerge("w-full flex justify-center items-start gap-5")}>
@@ -40,9 +41,9 @@ export default function GroupForm({
                     onSubmit={(e) => {
                         e.preventDefault();
                         if (idUpdating !== null) {
-                            updateGroup();
+                            UpdatePromoter();
                         } else {
-                            createGroup();
+                            CreatePromoter();
                         }
                     }}
                 >
@@ -55,8 +56,8 @@ export default function GroupForm({
                                 {input.label === "Descripción" && (
                                     <Info className="inline-block mr-2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                                 )}
-                                {input.label === "Concentrado" && (
-                                    <IconConcetrated className="inline-block mr-2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                {input.label === "Grupo" && (
+                                    <Group className="inline-block mr-2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                                 )}
                                 {input.type === "checkbox" ? null : input.label}
                             </label>
@@ -67,10 +68,10 @@ export default function GroupForm({
                                     name={input.label}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
                                 >
-                                    <option value="">Seleccione un concentrado</option>
-                                    {concentratedList.map((concentrated) => (
-                                        <option key={concentrated.id} value={concentrated.id}>
-                                            {concentrated.name}
+                                    <option value="">Seleccione un grupo</option>
+                                    {groupList.map((group) => (
+                                        <option key={group.id} value={group.id}>
+                                            {group.name}
                                         </option>
                                     ))}
                                 </select>
@@ -111,7 +112,7 @@ export default function GroupForm({
                     </button>
                 </form>
             </div>
+
         </div>
     )
-
 }

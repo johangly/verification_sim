@@ -4,6 +4,7 @@ import { ConcentratedDataGet } from '../types/concentrated'
 import toast from 'react-hot-toast'
 import { concentratedService } from '../services/concentratedService'
 import { groupService } from '../services/groupService'
+import { set } from 'zod'
 
 const groupEmptyState = {
     name: '',
@@ -30,11 +31,16 @@ export default function useGroup() {
         }
     }
     async function createGroup() {
+        if (!group.name || !group.description || group.concentratedId === 0) {
+            toast.error('Por favor completa todos los campos');
+            return;
+        }
         try {
             await groupService.createGroup(group);
             setGroup(groupEmptyState);
             toast.success(`Grupo creado con éxito`);
             setShowModal(false);
+            fetchAllGroups();
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(`Error al crear el grupo: ${error.message}`);
@@ -55,6 +61,7 @@ export default function useGroup() {
     }
     async function fetchGroupById(id: number) {
         try {
+            setIdUpdating(id);
             const response = await groupService.getGroupById(id);
             setGroup(response);
         } catch (error) {
@@ -69,12 +76,17 @@ export default function useGroup() {
             toast.error('No se ha especificado un ID para actualizar el grupo');
             return;
         }
+        if (!group.name || !group.description || group.concentratedId === 0) {
+            toast.error('Por favor completa todos los campos');
+            return;
+        }
         try {
             await groupService.updateGroup({ id: idUpdating, ...group });
             toast.success('Grupo actualizado con éxito');
             setGroup(groupEmptyState);
             setIdUpdating(null);
             setShowModal(false);
+            fetchAllGroups();
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(`Error al actualizar el grupo: ${error.message}`);

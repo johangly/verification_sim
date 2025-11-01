@@ -28,15 +28,10 @@ export default function useConcentrated() {
         }
     }   
     async function CreateConcentrated() {
-        if(!concentrated.name){
-            toast.error('El nombre del concentrado es obligatorio')
+        if(!concentrated.name || !concentrated.description){
+            toast.error('Por favor completa todos los campos')
             return
         }
-        if(!concentrated.description){
-            toast.error('La descripción del concentrado es obligatoria')
-            return
-        }
-        
         try{
             await concentratedService.createConcentrated(concentrated)
             toast.success('Concentrado creado exitosamente')
@@ -68,12 +63,10 @@ export default function useConcentrated() {
     }
     async function UpdateConcentrated(){
         console.log(concentrated)
-        if(!concentrated.name){
-            toast.error('El nombre del concentrado es obligatorio')
-            return
-        }
-        if(!concentrated.description){
-            toast.error('La descripción del concentrado es obligatoria')
+        if(!concentrated.name ||
+            !concentrated.description
+        ){
+            toast.error('Por favor completa todos los campos')
             return
         }
         if(idUpdating===null){

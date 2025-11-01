@@ -29,8 +29,8 @@ export default function ConcentratedPage() {
   } = useConcentrated();
   const dataToTable = allConcentrated.map((concentrated) => ({
     id: concentrated.id,
-    name: concentrated.name,
-    description: concentrated.description,
+    name: concentrated.name.slice(0,20),
+    description: concentrated.description.slice(0,20),
     isActive: concentrated.isActive,
     code: concentrated.code,
   }));
@@ -104,20 +104,7 @@ export default function ConcentratedPage() {
           >
             <DataTableComponent
               headers={[
-                {
-                  icon: LayoutGrid,
-                  title: "id",
-                  key: "id",
-                  cellClassName:
-                    "font-mono text-md text-gray-700 dark:text-gray-300",
-                  render: (value) => (
-                    <span
-                      className={`px-4 py-2 rounded-full text-md bg-blue-50 text-blue-600 `}
-                    >
-                      {value}
-                    </span>
-                  ),
-                },
+               
                 {
                   icon: User,
                   title: "Nombre",
